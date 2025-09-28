@@ -245,7 +245,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 <property name="minimumSize">
                  <size>
                   <width>60</width>
-                  <height>60</height>
+                  <height>58</height>
                  </size>
                 </property>
                 <property name="maximumSize">
@@ -263,7 +263,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  <string>3</string>
                 </property>
                 <property name="checkable">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -272,7 +272,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 <property name="minimumSize">
                  <size>
                   <width>60</width>
-                  <height>60</height>
+                  <height>58</height>
                  </size>
                 </property>
                 <property name="maximumSize">
@@ -290,7 +290,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  <string>2</string>
                 </property>
                 <property name="checkable">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -299,7 +299,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 <property name="minimumSize">
                  <size>
                   <width>60</width>
-                  <height>60</height>
+                  <height>58</height>
                  </size>
                 </property>
                 <property name="maximumSize">
@@ -317,10 +317,10 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  <string>4</string>
                 </property>
                 <property name="checkable">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                 <property name="checked">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>

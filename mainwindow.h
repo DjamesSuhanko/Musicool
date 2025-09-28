@@ -8,6 +8,7 @@
 #include <QMainWindow>
 #include <QPermission>
 #include <QTimer>
+#include <QButtonGroup>
 
 #ifdef Q_OS_ANDROID
 #include <QPermission>
@@ -47,5 +48,12 @@ private:
     void startTunerWithPermission();
     void setupToolBoxBehavior();       // start/stop ao trocar de aba
     void wireTunerSignals();
+
+    QButtonGroup *m_group = nullptr;
+
+protected:
+    bool event(QEvent *e) override;
+
+
 };
 #endif // MAINWINDOW_H

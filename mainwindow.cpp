@@ -11,6 +11,9 @@
 #include <QGuiApplication>
 #include <QDebug>
 
+#include "androidutils.h"
+#include <QEvent>
+
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
 #endif
@@ -29,11 +32,40 @@ static void keepScreenOn(bool on) {
 }
 #endif
 
+bool MainWindow::event(QEvent *e) {
+    if (e->type() == QEvent::WindowActivate) {
+        AndroidUtils::applyImmersive(true);
+        AndroidUtils::keepScreenOn(true);   // <- reassert
+    }
+    return QMainWindow::event(e);
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    m_group = new QButtonGroup(this);
+
+
+    m_group->addButton(ui->pushButton_2);
+    m_group->addButton(ui->pushButton_3);
+    m_group->addButton(ui->pushButton_4);
+    m_group->setExclusive(true);
+
+    ui->pushButton_2->setCheckable(true);
+    ui->pushButton_3->setCheckable(true);
+    ui->pushButton_4->setCheckable(true);
+
+    ui->pushButton_4->setChecked(true);
+
+    connect(m_group, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
+            this, [](QAbstractButton *button){
+                qDebug() << "Selecionado:" << button->text();
+            });
+
 
 #ifdef Q_OS_ANDROID
     keepScreenOn(true);
