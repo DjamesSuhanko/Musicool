@@ -14,6 +14,11 @@
 #include "androidutils.h"
 #include <QEvent>
 
+#include <QStyle>               // necessário para QStyle e seus enums (SP_ArrowRight etc.)
+#include <QStyleOption>         // base (se usar opções de estilo)
+#include <QStyleOptionSlider>   // se usar QStyleOptionSlider
+#include <QProxyStyle>          // se estiver usando QProxyStyle
+
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
 #endif
@@ -135,6 +140,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->lineEdit_metronome->setReadOnly(true);
 
+    ui->pushButton_octave_down->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+    ui->pushButton_octave_down->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_up->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+    ui->pushButton_octave_up->setIconSize(QSize(32, 32));
+    ui->pushButton_previous->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+    ui->pushButton_previous->setIconSize(QSize(32, 32));
+    ui->pushButton_next->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+    ui->pushButton_next->setIconSize(QSize(32, 32));
+    ui->pushButton_stop_2->setText(QString::fromUtf8("⏹︎"));
+    ui->pushButton_start_2->setText(QString::fromUtf8("▶"));
+    ui->pushButton_sharp->setText(QString::fromUtf8("♯"));
+    ui->pushButton_bemol->setText(QString::fromUtf8("♭"));
 }
 
 void MainWindow::setBPMvalue(QAbstractButton* button)
