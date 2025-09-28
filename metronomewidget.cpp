@@ -87,16 +87,14 @@ void MetronomeWidget::start()
 {
     if (m_running) return;
 
-    ensureAudio();     // prepara saída de áudio (se habilitada)
-    m_currentBeat = 0;
+    ensureAudio();
+    m_currentBeat = m_beats - 1;                 // << prepara para virar para 0 no primeiro tick
 
     const int intervalMs = int(60000.0 / double(m_bpm));
     m_timer.start(intervalMs);
     m_running = true;
-    update();
 
-    // toca já no início (opcional)
-    onBeat();
+    onBeat();                                    // toca imediatamente o 1 (downbeat)
 }
 
 void MetronomeWidget::stop()
@@ -180,15 +178,17 @@ void MetronomeWidget::playClick(bool downbeat)
 // ---------------- tick ----------------
 void MetronomeWidget::onBeat()
 {
+    // 0,1,2,3...
+    m_currentBeat = (m_currentBeat + 1) % m_beats;
+
     const bool isDown = (m_currentBeat == 0);
     if (m_audioOn) playClick(isDown && m_accentOn);
 
     emit tick(m_currentBeat, isDown);
-    update();
 
-    // avança batida
-    m_currentBeat = (m_currentBeat + 1) % m_beats;
+    update();     // o repaint agora reflete exatamente a batida tocada
 }
+
 
 // ---------------- pintura ----------------
 void MetronomeWidget::paintEvent(QPaintEvent*)
@@ -235,30 +235,32 @@ void MetronomeWidget::drawBeatSquares(QPainter &g)
     QPen pen(m_boxBorder, 1.2);
     for (int i = 0; i < n; ++i) {
         const qreal x = area.left() + i * (boxW + gap);
-        QRectF r(x, y, boxW, boxH);
+
+        // torna o “box” um círculo: usa o menor dos dois lados como diâmetro
+        const qreal d  = qMin(boxW, boxH);
+        const qreal yC = y + (boxH - d) / 2.0;
+        QRectF r(x, yC, d, d);
 
         const bool active = (i == m_currentBeat);
         const bool down   = (i == 0);
 
         QColor fill = m_box;
-        if (active) {
-            fill = down ? m_highlightDn : m_highlightUp;
-        }
+        if (active) fill = down ? m_highlightDn : m_highlightUp;
 
-        // fundo
+        // fundo do círculo
         g.setPen(Qt::NoPen);
         g.setBrush(fill);
-        g.drawRoundedRect(r, radius, radius);
+        g.drawEllipse(r);
 
         // borda
         g.setPen(pen);
         g.setBrush(Qt::NoBrush);
-        g.drawRoundedRect(r, radius, radius);
+        g.drawEllipse(r);
 
-        // número do tempo
+        // número do tempo (centralizado no círculo)
         QFont f = font();
         f.setBold(active);
-        f.setPointSizeF(qMax(10.0, boxH * 0.40));
+        f.setPointSizeF(qMax(10.0, d * 0.40));
         g.setFont(f);
         g.setPen(QColor("#EEEEEE"));
         g.drawText(r, Qt::AlignCenter, QString::number(i + 1));
