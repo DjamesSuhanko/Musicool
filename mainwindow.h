@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "tunerwidget.h"
 #include "pitchtracker.h"
+#include "metronomewidget.h"
 #include <QMainWindow>
 #include <QPermission>
 #include <QTimer>
