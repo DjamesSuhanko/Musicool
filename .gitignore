@@ -1,0 +1,61 @@
+# =======================================
+# Qt / QMake / CMake
+# =======================================
+build/
+cmake-build*/
+*.pro.user
+*.autosave
+*.qmlc
+*.jsc
+*.qmake.stash
+
+# =======================================
+# Android (Gradle / Studio)
+# =======================================
+.gradle/
+local.properties
+*.iml
+.idea/
+*.apk
+*.ap_
+*.dex
+*.class
+*.jar
+*.keystore
+*.so
+*.log
+android-build/
+
+# Intermediates e caches do Android
+**/build/
+**/intermediates/
+**/outputs/
+**/captures/
+
+# =======================================
+# IDEs (Qt Creator / VS / CLion / Xcode)
+# =======================================
+*.user
+*.user.*
+*.swp
+*.swo
+*.swn
+.vscode/
+.idea/
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+*.suo
+*.ncb
+*.opensdf
+*.db
+*.opendb
+
+# =======================================
+# Sistema operacional
+# =======================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
