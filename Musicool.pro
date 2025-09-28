@@ -30,10 +30,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    ../Musicool.pro/AndroidManifest.xml \
-    ../Musicool.pro/build.gradle \
-    ../Musicool.pro/res/values/libs.xml \
-    ../Musicool.pro/res/xml/qtprovider_paths.xml \
+    MusicoolDir.pro/AndroidManifest.xml \
+    MusicoolDir.pro/build.gradle \
+    MusicoolDir.pro/res/values/libs.xml \
+    MusicoolDir.pro/res/xml/qtprovider_paths.xml \
     android/AndroidManifest.xml \
     android/build.gradle \
     android/res/values/libs.xml \
@@ -41,5 +41,5 @@ DISTFILES += \
 
 contains(ANDROID_TARGET_ARCH,arm64-v8a) {
     ANDROID_PACKAGE_SOURCE_DIR = \
-        $$PWD/../Musicool.pro
+        $$PWD/MusicoolDir.pro
 }
