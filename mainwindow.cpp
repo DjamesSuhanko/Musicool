@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "TunerWidget.h"     // ajuste o case conforme o nome no disco
+#include "TunerWidget.h"
 #include "PitchTracker.h"
 
 #include <QVBoxLayout>
@@ -47,12 +47,28 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    this->metro = new MetronomeWidget(this);
+    metro->setBeatsPerMeasure(4);
+    metro->setBpm(ui->lineEdit_metronome->text().toInt());
+    metro->setAudioEnabled(true);
+    metro->setAccentEnabled(true);
+    // adicionar no frame
+    auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout());
+    if (!lay) { lay = new QVBoxLayout(ui->frameMetro); lay->setContentsMargins(0,0,0,0); }
+    lay->addWidget(metro);
+
     m_group = new QButtonGroup(this);
+    b_group = new QButtonGroup(this);
 
-
+    //MEASURE GROUP ====================================
     m_group->addButton(ui->pushButton_2);
     m_group->addButton(ui->pushButton_3);
     m_group->addButton(ui->pushButton_4);
+
+    m_group->setId(ui->pushButton_2,2);
+    m_group->setId(ui->pushButton_3,3);
+    m_group->setId(ui->pushButton_4,4);
+
     m_group->setExclusive(true);
 
     ui->pushButton_2->setCheckable(true);
@@ -61,10 +77,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->pushButton_4->setChecked(true);
 
-    connect(m_group, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
-            this, [](QAbstractButton *button){
-                qDebug() << "Selecionado:" << button->text();
-            });
+    connect(m_group, &QButtonGroup::idClicked, this, [this](int beats){
+        metro->setBeatsPerMeasure(beats);
+    });
+
+    //BPM GROUP ========================================
+    b_group->addButton(ui->pushButton_less_one);
+    b_group->addButton(ui->pushButton_less_10);
+    b_group->addButton(ui->pushButton_plus_one);
+    b_group->addButton(ui->pushButton_plus_ten);
+
+    b_group->setId(ui->pushButton_less_one,-1);
+    b_group->setId(ui->pushButton_less_10,-10);
+    b_group->setId(ui->pushButton_plus_one,1);
+    b_group->setId(ui->pushButton_plus_ten,10);
+
+
+    connect(ui->pushButton_start, &QPushButton::clicked, metro, &MetronomeWidget::start);
+    connect(ui->pushButton_stop,  &QPushButton::clicked, metro, &MetronomeWidget::stop);
 
 
 #ifdef Q_OS_ANDROID
@@ -73,8 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
             [](Qt::ApplicationState st){ if (st == Qt::ApplicationActive) keepScreenOn(true); });
 #endif
 
-    // Se quiser garantir por código que a aba do afinador é a TUNER:
-    // ui->toolBox->setCurrentIndex(TUNER);
+     ui->toolBox->setCurrentIndex(PAGEINFO);
 
     m_tuner   = new TunerWidget(this);
     m_tracker = new PitchTracker(this);
@@ -95,6 +124,29 @@ MainWindow::MainWindow(QWidget *parent)
                 if (st == Qt::ApplicationActive && ui->toolBox->currentIndex() == TUNER)
                     startTunerWithPermission();
             });
+
+    //incremento/decremento do BPM
+    connect(b_group, &QButtonGroup::buttonClicked, this, &MainWindow::setBPMvalue);
+
+    //desligar metronomo se trocar de aba
+    connect(ui->toolBox, &QToolBox::currentChanged, this, [this](int idx){
+        if (ui->toolBox->currentIndex() != METRONOME && metro) metro->stop();
+    });
+
+    ui->lineEdit_metronome->setReadOnly(true);
+
+}
+
+void MainWindow::setBPMvalue(QAbstractButton* button)
+{
+    const int delta = b_group->id(button);
+
+    constexpr int MIN_BPM = 30;
+    constexpr int MAX_BPM = 300;
+
+    int bpm = std::clamp(metro->bpm() + delta, MIN_BPM, MAX_BPM);
+    metro->setBpm(bpm);
+    ui->lineEdit_metronome->setText(QString::number(bpm));
 }
 
 MainWindow::~MainWindow()
