@@ -92,14 +92,14 @@ Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
 através dos botões.<br>
 Play e Stop levam até 2 segundos para iniciar.</p>
 
-<h2>Metrônomo</h2>
+<h2>Metronome</h2>
 <p>O metrônomo tem seleção de compasso binário, ternário e quaternário.
 O ajuste de BPM permite adicionar 1 unidade de tempo ou 10 unidades de tempo por vez.</p>
 
 <h2>Sobre o autor</h2>
 <p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
 nenhum vínculo do app com a CCB.</p>
-<p>O aplicativo, atualização, segurança e mantenimento é de inteira<br>
+<p>O aplicativo, atualização, segurança e mantenimento é de inteira
 responsabilidade do autor.</p>
 <br><br>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
