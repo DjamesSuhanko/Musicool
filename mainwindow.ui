@@ -61,7 +61,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="tabSpacing">
        <number>6</number>
@@ -588,7 +588,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
            </layout>
           </item>
           <item>
-           <widget class="QFrame" name="frame">
+           <widget class="QFrame" name="frame_staff">
             <property name="minimumSize">
              <size>
               <width>0</width>
