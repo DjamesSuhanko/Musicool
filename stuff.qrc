@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>sol.png</file>
+    </qresource>
+</RCC>

@@ -71,33 +71,33 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->textBrowser->setHtml(R"(
 <h2>About the Musicool</h2>
-<p>Esse aplicativo foi desenvolvido para ser usado<br>
-por músicos da CCB, por isso é um aplicativo sem<br>
+<p align='justify'>Esse aplicativo foi desenvolvido para ser usado
+por músicos da CCB, por isso é um aplicativo sem
 custo e em constante evolução.</p>
 
-<p>Se você é músico mas não é da CCB, também é gratuito<br>
+<p>Se você é músico mas não é da CCB, também é gratuito
 para você. Apenas diga 1 vez em voz alta:<br>
 <b>'Deus seja louvado: Amém!'</b>.</p>
 
 <h2>Tuner</h2>
-<p>O Tuner tem o propósito de afinar instrumentos de sopro.<br>
-Deve funcionar também com violino, viola e chello.<br>
-Ao clicar em <b>Tuner</b>, o microfone precisará ser<br>
-aberto pelo aplicativo para 'escutar' seu instrumento.<br>
+<p>O Tuner tem o propósito de afinar instrumentos de sopro.
+Deve funcionar também com violino, viola e chello.
+Ao clicar em <b>Tuner</b>, o microfone precisará ser
+aberto pelo aplicativo para 'escutar' seu instrumento.
 Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
 
 <h2>Notes Sound</h2>
-<p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.<br>
-É possível também usar bemol e sustenido, trocar de nota ou de oitava,<br>
+<p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
+É possível também usar bemol e sustenido, trocar de nota ou de oitava,
 através dos botões.<br>
 Play e Stop levam até 2 segundos para iniciar.</p>
 
 <h2>Metrônomo</h2>
-<p>O metrônomo tem seleção de compasso binário, ternário e quaternário.<br>
+<p>O metrônomo tem seleção de compasso binário, ternário e quaternário.
 O ajuste de BPM permite adicionar 1 unidade de tempo ou 10 unidades de tempo por vez.</p>
 
 <h2>Sobre o autor</h2>
-<p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo<br>
+<p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
 nenhum vínculo do app com a CCB.</p>
 <p>O aplicativo, atualização, segurança e mantenimento é de inteira<br>
 responsabilidade do autor.</p>
@@ -281,11 +281,60 @@ responsabilidade do autor.</p>
         qDebug() << "[Tone] START click";
     });
 
+
+    //-------------- staff widget ---------------------------------------------------------------
+    this->staff = new StaffNoteWidget(this);
+    staff->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps); // ou Flats/Auto
+    staff->setShowLabel(true);
+
+    connect(toneGen, &ToneGenerator::frequencyChanged, staff,  &StaffNoteWidget::setFrequencyHz);
+
+
+    connect(toneGen, &ToneGenerator::frequencyChanged,
+            this, [this](double hz){
+                if (staff)
+                    staff->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
+            });
+
+
+    this->staff->setColors(QColor("#121212"), QColor("#3C3C40"), QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+    this->setupStaffInFrame();
+
     //=========================== REF:TONE ======================================================
 
     //REF:ABOUT
     ui->toolBox->setCurrentIndex(PAGEINFO);
 }
+
+void MainWindow::setupStaffInFrame()
+{
+    QFrame* frame = ui->frame_staff;
+    if (!frame) return;
+
+    if (!staff)
+        staff = new StaffNoteWidget(this);  // cria o widget
+
+    // layout do frame (cria se não existir)
+    auto *lay = qobject_cast<QVBoxLayout*>(frame->layout());
+    if (!lay) {
+        lay = new QVBoxLayout(frame);
+        lay->setContentsMargins(0,0,0,0);
+        lay->setSpacing(0);
+        frame->setLayout(lay);
+    }
+
+    // evita adicionar duas vezes
+    if (staff->parentWidget() != frame) {
+        staff->setClefImageFile(":/sol.png");
+        staff->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        lay->addWidget(staff);
+        staff->show();
+    }
+
+    // (opcional) estilo/cores para combinar com o app
+    staff->setColors(QColor("#121212"), QColor("#3C3C40"), QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+}
+
 
 void MainWindow::emitOctave()
 {

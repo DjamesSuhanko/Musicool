@@ -11,6 +11,8 @@
 #include <QTimer>
 #include <QButtonGroup>
 
+//TODO: teste
+#include "staffnotewidget.h"
 
 #ifdef Q_OS_ANDROID
 #include <QPermission>
@@ -59,6 +61,7 @@ private:
     TunerWidget  *m_tuner    = nullptr;
     MetronomeWidget *metro   = nullptr;
     ToneGenerator *toneGen   = nullptr;
+    StaffNoteWidget *staff   = nullptr;
 
     QButtonGroup *m_group    = nullptr; // measure
     QButtonGroup *b_group    = nullptr; // bpm
@@ -67,6 +70,7 @@ private:
     void startTunerWithPermission();
     void setupToolBoxBehavior();       // start/stop ao trocar de aba
     void wireTunerSignals();
+    void setupStaffInFrame();
 
     int noteIdxValue = 0;
     int octaveValue  = 4;
