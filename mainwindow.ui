@@ -430,7 +430,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                <set>Qt::InputMethodHint::ImhNone</set>
               </property>
               <property name="text">
-               <string>261.63 Hz</string>
+               <string>400.00 Hz</string>
               </property>
               <property name="maxLength">
                <number>14</number>
