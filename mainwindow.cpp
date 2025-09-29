@@ -1,8 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "TunerWidget.h"
-#include "PitchTracker.h"
+#include "tunerwidget.h"
+#include "pitchtracker.h"
 
 #include <QVBoxLayout>
 #include <QTimer>
@@ -13,6 +13,13 @@
 
 #include "androidutils.h"
 #include <QEvent>
+
+#include <QStyle>               // necessário para QStyle e seus enums (SP_ArrowRight etc.)
+#include <QStyleOption>         // base (se usar opções de estilo)
+#include <QStyleOptionSlider>   // se usar QStyleOptionSlider
+#include <QProxyStyle>          // se estiver usando QProxyStyle
+
+#include <QScroller>
 
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
@@ -47,6 +54,59 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    //REF:ABOUT
+
+    QScroller::grabGesture(ui->textBrowser->viewport(), QScroller::TouchGesture);
+    ui->textBrowser->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+    ui->textBrowser->setStyleSheet(
+        "QScrollBar:vertical{width:16px;margin:0px;}"
+        "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
+        );
+
+    ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->textBrowser->setReadOnly(true);
+    ui->textBrowser->setOpenExternalLinks(true);
+    ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->textBrowser->setHtml(R"(
+<h2>About the Musicool</h2>
+<p>Esse aplicativo foi desenvolvido para ser usado<br>
+por músicos da CCB, por isso é um aplicativo sem<br>
+custo e em constante evolução.</p>
+
+<p>Se você é músico mas não é da CCB, também é gratuito<br>
+para você. Apenas diga 1 vez em voz alta:<br>
+<b>'Deus seja louvado: Amém!'</b>.</p>
+
+<h2>Tuner</h2>
+<p>O Tuner tem o propósito de afinar instrumentos de sopro.<br>
+Deve funcionar também com violino, viola e chello.<br>
+Ao clicar em <b>Tuner</b>, o microfone precisará ser<br>
+aberto pelo aplicativo para 'escutar' seu instrumento.<br>
+Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
+
+<h2>Notes Sound</h2>
+<p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.<br>
+É possível também usar bemol e sustenido, trocar de nota ou de oitava,<br>
+através dos botões.<br>
+Play e Stop levam até 2 segundos para iniciar.</p>
+
+<h2>Metrônomo</h2>
+<p>O metrônomo tem seleção de compasso binário, ternário e quaternário.<br>
+O ajuste de BPM permite adicionar 1 unidade de tempo ou 10 unidades de tempo por vez.</p>
+
+<h2>Sobre o autor</h2>
+<p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo<br>
+nenhum vínculo do app com a CCB.</p>
+<p>O aplicativo, atualização, segurança e mantenimento é de inteira<br>
+responsabilidade do autor.</p>
+<br><br>
+<p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
+)");
+
+    //REF:METRONOMO
+    ui->lineEdit_metronome->setReadOnly(true);
     this->metro = new MetronomeWidget(this);
     metro->setBeatsPerMeasure(4);
     metro->setBpm(ui->lineEdit_metronome->text().toInt());
@@ -103,8 +163,8 @@ MainWindow::MainWindow(QWidget *parent)
             [](Qt::ApplicationState st){ if (st == Qt::ApplicationActive) keepScreenOn(true); });
 #endif
 
-     ui->toolBox->setCurrentIndex(PAGEINFO);
 
+    //REF:TUNER
     m_tuner   = new TunerWidget(this);
     m_tracker = new PitchTracker(this);
 
@@ -133,7 +193,126 @@ MainWindow::MainWindow(QWidget *parent)
         if (ui->toolBox->currentIndex() != METRONOME && metro) metro->stop();
     });
 
-    ui->lineEdit_metronome->setReadOnly(true);
+    //=========================== REF:TONE ======================================================
+    this->toneGen = new ToneGenerator(this);
+
+    //------------------------------ octave up/down -------------------------------------
+    ui->pushButton_octave_down->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+    ui->pushButton_octave_down->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_down->setProperty("moreOrLess",-1);
+    connect(ui->pushButton_octave_down, &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveDown);
+
+    ui->pushButton_octave_up->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+    ui->pushButton_octave_up->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_up->setProperty("moreOrLess",1);
+    connect(ui->pushButton_octave_up,   &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveUp);
+    //------------------------------ octave up/down -------------------------------------
+
+    //------------------------------ note up/down ---------------------------------------
+    ui->pushButton_previous->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+    ui->pushButton_previous->setIconSize(QSize(32, 32));
+    ui->pushButton_previous->setProperty("moreOrLess",-1);
+    connect(ui->pushButton_previous, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
+
+    ui->pushButton_next->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+    ui->pushButton_next->setIconSize(QSize(32, 32));
+    ui->pushButton_next->setProperty("moreOrLess",1);
+    connect(ui->pushButton_next, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
+    //------------------------------ note up/down ---------------------------------------
+
+    //------------------------------ stop/start -----------------------------------------
+    ui->pushButton_stop_2->setText(QString::fromUtf8("⏹︎"));
+    connect(ui->pushButton_stop_2, &QPushButton::clicked, toneGen, &ToneGenerator::stop);
+
+    ui->pushButton_start_2->setText(QString::fromUtf8("▶"));
+    connect(ui->pushButton_start_2, &QPushButton::clicked, toneGen, &ToneGenerator::start);
+    //------------------------------ stop/start -----------------------------------------
+
+    //-----------------------------sustenido/bemol---------------------------------------
+    ui->pushButton_sharp->setCheckable(true);
+    ui->pushButton_bemol->setCheckable(true);
+
+    ui->pushButton_sharp->setText(QString::fromUtf8("♯"));
+    ui->pushButton_sharp->setProperty("moreOrLess",1);
+
+    ui->pushButton_bemol->setText(QString::fromUtf8("♭"));
+    ui->pushButton_bemol->setProperty("moreOrLess",-1);
+
+    connect(ui->pushButton_sharp, &QPushButton::toggled, this, [=](bool on){
+    if (on) ui->pushButton_bemol->setChecked(false);
+    toneGen->setAccidental(on ? ToneGenerator::Sharp
+                              : (ui->pushButton_bemol->isChecked() ? ToneGenerator::Flat
+                                                                   : ToneGenerator::Natural));
+});
+    connect(ui->pushButton_bemol, &QPushButton::toggled, this, [=](bool on){
+    if (on) ui->pushButton_sharp->setChecked(false);
+    toneGen->setAccidental(on ? ToneGenerator::Flat
+                              : (ui->pushButton_sharp->isChecked() ? ToneGenerator::Sharp
+                                                                   : ToneGenerator::Natural));
+});
+
+    //-----------------------------sustenido/bemol---------------------------------------
+
+
+    //-------------------------------- labels -------------------------------------------
+    //NOTA
+    connect(toneGen, &ToneGenerator::noteLabelChanged, ui->lineEdit_notes, &QLineEdit::setText);
+
+    //FREQ
+    connect(toneGen, &ToneGenerator::frequencyChanged, this, [=](double hz){
+        ui->lineEdit_freq->setText(QString::number(hz, 'f', 2) + " Hz");
+    });
+
+    ui->lineEdit_notes->setReadOnly(true);
+    ui->lineEdit_freq->setReadOnly(true);
+
+    //-------------------------------- labels -------------------------------------------
+
+    //connect(this,SIGNAL(noteIdx(int)),this->toneGen,SLOT(setNoteIndex(int)));
+    connect(this, &MainWindow::noteIdx, this->toneGen, &ToneGenerator::setNoteIndex);
+
+    toneGen->setNoteIndex(toneGen->noteIndex());  // dispara noteLabelChanged("C4")
+    toneGen->setVolume(1.0f);
+
+    connect(toneGen, &ToneGenerator::frequencyChanged, this, [](double hz){
+        qDebug() << "[Tone] hz =" << hz;
+    });
+    connect(ui->pushButton_start_2, &QPushButton::clicked, []{
+        qDebug() << "[Tone] START click";
+    });
+
+    //=========================== REF:TONE ======================================================
+
+    //REF:ABOUT
+    ui->toolBox->setCurrentIndex(PAGEINFO);
+}
+
+void MainWindow::emitOctave()
+{
+    auto* btn = qobject_cast<QAbstractButton*>(sender());
+    if (!btn) return;
+
+    int tmpValue = btn->property("moreOrLess").toInt()+octaveValue;
+    if (tmpValue < OCTAVEMIN || tmpValue > OCTAVEMAX){
+        return;
+    }
+
+    this->octaveValue = tmpValue;
+    emit octaveIdx(this->octaveValue);
+}
+
+void MainWindow::emitNote()
+{
+    auto* btn = qobject_cast<QAbstractButton*>(sender());
+    if (!btn) return;
+
+    int tmpValue = btn->property("moreOrLess").toInt()+noteIdxValue;
+    if (tmpValue < NOTE_DO || tmpValue > NOTE_SI){
+        return;
+    }
+
+    this->noteIdxValue = tmpValue;
+    emit noteIdx(this->noteIdxValue);
 
 }
 

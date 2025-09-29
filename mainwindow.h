@@ -5,6 +5,7 @@
 #include "tunerwidget.h"
 #include "pitchtracker.h"
 #include "metronomewidget.h"
+#include "tonegenerator.h"
 #include <QMainWindow>
 #include <QPermission>
 #include <QTimer>
@@ -19,6 +20,11 @@
 #define TUNER     1
 #define GENFREQ   2
 #define METRONOME 3
+
+#define OCTAVEMIN 2
+#define OCTAVEMAX 5
+#define NOTE_DO   0
+#define NOTE_SI   6
 
 constexpr int MIN_BPM = 30;
 constexpr int MAX_BPM = 300;
@@ -43,21 +49,33 @@ public:
 private slots:
     void onMicrophonePermissionChanged(const QPermission &perm);
     void setBPMvalue(QAbstractButton* button);
+    void emitNote(); //conectar com os botoes de nota; identificar o botão e somar/subtrair, considerando >0 e <7
+    void emitOctave(); // TODO: tratar N oitavas
 
 private:
     Ui::MainWindow *ui;
-    PitchTracker*  m_tracker = nullptr;
-    TunerWidget*  m_tuner = nullptr;
+
+    PitchTracker  *m_tracker = nullptr;
+    TunerWidget  *m_tuner    = nullptr;
+    MetronomeWidget *metro   = nullptr;
+    ToneGenerator *toneGen   = nullptr;
+
+    QButtonGroup *m_group    = nullptr; // measure
+    QButtonGroup *b_group    = nullptr; // bpm
 
     void setupTunerInFrame();
     void startTunerWithPermission();
     void setupToolBoxBehavior();       // start/stop ao trocar de aba
     void wireTunerSignals();
 
-    QButtonGroup *m_group = nullptr; // measure
-    QButtonGroup *b_group = nullptr; // bpm
+    int noteIdxValue = 0;
+    int octaveValue  = 4;
 
-    MetronomeWidget *metro = nullptr;
+signals:
+    void noteIdx(int v);
+    void octaveIdx(int v);
+
+
 
 protected:
     bool event(QEvent *e) override;
