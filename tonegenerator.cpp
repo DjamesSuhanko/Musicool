@@ -102,6 +102,7 @@ void ToneGenerator::start()
 
     // define frequência atual e abre o gate
     updateFrequency();
+    updateLabel();
     m_sine->gate(true);
     m_playing = true;
     emit started();
@@ -248,10 +249,12 @@ void ToneGenerator::ensureAudio()
     // (re)cria a sink
     if (m_sink) { m_sink->stop(); m_sink->deleteLater(); m_sink = nullptr; }
     m_sink = new QAudioSink(dev, m_fmt, this);
-    m_sink->setVolume(1.0f);            // volume do dispositivo (0..1)
-    if (m_sine) {
-        m_sine->setSampleRate(m_sampleRate);
-        m_sine->setVolume(m_volume);    // volume lógico do gerador
-    }
-    m_stream = m_sink->start();         // inicia o “pull”
+    m_sink->setVolume(1.0f);
+
+    m_sine->setSampleRate(m_sampleRate);
+    m_sine->setVolume(m_volume);
+
+    // PULL MODE: a sink puxa dados do seu QIODevice gerador
+    m_sink->start(m_sine);
+    m_stream = nullptr; // não usado em pull mode
 }

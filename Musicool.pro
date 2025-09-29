@@ -14,6 +14,7 @@ SOURCES += \
     mainwindow.cpp \
     metronomewidget.cpp \
     pitchtracker.cpp \
+    staffnotewidget.cpp \
     tonegenerator.cpp \
     tunerwidget.cpp
 
@@ -22,6 +23,7 @@ HEADERS += \
     mainwindow.h \
     metronomewidget.h \
     pitchtracker.h \
+    staffnotewidget.h \
     tonegenerator.h \
     tunerwidget.h
 
