@@ -232,73 +232,90 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
             <property name="spacing">
              <number>12</number>
             </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+            </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_6">
               <property name="spacing">
                <number>12</number>
               </property>
               <item>
-               <widget class="QPushButton" name="pushButton_sharp">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>58</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>60</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>#</string>
-                </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_12">
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>NOTE</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_9">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_previous">
+                    <property name="minimumSize">
+                     <size>
+                      <width>60</width>
+                      <height>58</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>60</width>
+                      <height>60</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>16</pointsize>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="checkable">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_next">
+                    <property name="minimumSize">
+                     <size>
+                      <width>60</width>
+                      <height>58</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>60</width>
+                      <height>60</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>16</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="checkable">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
               </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_bemol">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>58</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>60</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>b</string>
-                </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <property name="spacing">
-               <number>12</number>
-              </property>
               <item>
                <spacer name="horizontalSpacer_9">
                 <property name="orientation">
@@ -313,60 +330,81 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                </spacer>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_octave_down">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>58</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>60</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <italic>false</italic>
-                 </font>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_octave_up">
-                <property name="minimumSize">
-                 <size>
-                  <width>60</width>
-                  <height>58</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>60</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <italic>false</italic>
-                 </font>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-               </widget>
+               <layout class="QGridLayout" name="gridLayout_9">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_2">
+                  <property name="text">
+                   <string>OCTAVE</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_octave_down">
+                    <property name="minimumSize">
+                     <size>
+                      <width>60</width>
+                      <height>58</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>60</width>
+                      <height>60</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>16</pointsize>
+                      <italic>false</italic>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="checkable">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_octave_up">
+                    <property name="minimumSize">
+                     <size>
+                      <width>60</width>
+                      <height>58</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>60</width>
+                      <height>60</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>16</pointsize>
+                      <italic>false</italic>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="checkable">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -374,10 +412,13 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
           </item>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_9">
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+            </property>
             <item>
              <widget class="QLineEdit" name="lineEdit_notes">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -397,7 +438,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                <set>Qt::InputMethodHint::ImhNone</set>
               </property>
               <property name="text">
-               <string>C4</string>
+               <string>A4</string>
               </property>
               <property name="maxLength">
                <number>8</number>
@@ -430,7 +471,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                <set>Qt::InputMethodHint::ImhNone</set>
               </property>
               <property name="text">
-               <string>261.63 Hz</string>
+               <string>440.00 Hz</string>
               </property>
               <property name="maxLength">
                <number>14</number>
@@ -447,13 +488,13 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
             <property name="spacing">
              <number>12</number>
             </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+            </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <property name="spacing">
-               <number>12</number>
-              </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_11">
               <item>
-               <widget class="QPushButton" name="pushButton_previous">
+               <widget class="QPushButton" name="pushButton_bemol">
                 <property name="minimumSize">
                  <size>
                   <width>60</width>
@@ -473,7 +514,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  </font>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>b</string>
                 </property>
                 <property name="checkable">
                  <bool>false</bool>
@@ -481,7 +522,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_next">
+               <widget class="QPushButton" name="pushButton_sharp">
                 <property name="minimumSize">
                  <size>
                   <width>60</width>
@@ -500,7 +541,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  </font>
                 </property>
                 <property name="text">
-                 <string/>
+                 <string>#</string>
                 </property>
                 <property name="checkable">
                  <bool>false</bool>
@@ -588,7 +629,29 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
            </layout>
           </item>
           <item>
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Policy::Minimum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QFrame" name="frame_staff">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -602,19 +665,6 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
              <enum>QFrame::Shadow::Raised</enum>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Orientation::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </item>

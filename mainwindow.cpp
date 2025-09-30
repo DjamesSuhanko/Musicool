@@ -282,7 +282,7 @@ responsabilidade do autor.</p>
     });
 
 
-    //-------------- staff widget ---------------------------------------------------------------
+    //-------------- REF:STAFF ---------------------------------------------------------------
     this->staff = new StaffNoteWidget(this);
     staff->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps); // ou Flats/Auto
     staff->setShowLabel(true);
