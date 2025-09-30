@@ -168,7 +168,7 @@ void ToneGenerator::setVolume(float vol01)
 // --------------------- helpers -------------------------------------
 QString ToneGenerator::noteLabel() const
 {
-    static const char* names[7] = {"C","D","E","F","G","A","B"};
+    static const char* names[7] = {"DO","RE","MI","FA","SOL","LA","SI"};
     QString lab = names[m_noteIndex];
     if      (m_acc == Sharp) lab += "#";
     else if (m_acc == Flat)  lab += "b";
