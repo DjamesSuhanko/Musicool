@@ -43,7 +43,8 @@ DISTFILES += \
     android/AndroidManifest.xml \
     android/build.gradle \
     android/res/values/libs.xml \
-    android/res/xml/qtprovider_paths.xml
+    android/res/xml/qtprovider_paths.xml \
+    android/src/org/qtproject/example/EdgeToEdgeHelper.java
 
 contains(ANDROID_TARGET_ARCH,arm64-v8a) {
     ANDROID_PACKAGE_SOURCE_DIR = \

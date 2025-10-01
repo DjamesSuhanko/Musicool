@@ -10,42 +10,12 @@
 #include <QFrame>
 #include <QGuiApplication>
 #include <QDebug>
-
-#include "androidutils.h"
 #include <QEvent>
-
-#include <QStyle>               // necessário para QStyle e seus enums (SP_ArrowRight etc.)
-#include <QStyleOption>         // base (se usar opções de estilo)
-#include <QStyleOptionSlider>   // se usar QStyleOptionSlider
-#include <QProxyStyle>          // se estiver usando QProxyStyle
-
+#include <QStyle>
+#include <QStyleOption>
+#include <QStyleOptionSlider>
+#include <QProxyStyle>
 #include <QScroller>
-
-#ifdef Q_OS_ANDROID
-#include <QJniObject>
-#endif
-
-#ifdef Q_OS_ANDROID
-static void keepScreenOn(bool on) {
-    QJniObject activity = QNativeInterface::QAndroidApplication::context();
-    if (!activity.isValid()) return;
-
-    QJniObject window = activity.callObjectMethod("getWindow", "()Landroid/view/Window;");
-    if (!window.isValid()) return;
-
-    const jint FLAG_KEEP_SCREEN_ON = 128; // WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-    if (on)  window.callMethod<void>("addFlags",   "(I)V", FLAG_KEEP_SCREEN_ON);
-    else     window.callMethod<void>("clearFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
-}
-#endif
-
-bool MainWindow::event(QEvent *e) {
-    if (e->type() == QEvent::WindowActivate) {
-        AndroidUtils::applyImmersive(true);
-        AndroidUtils::keepScreenOn(true);   // <- reassert
-    }
-    return QMainWindow::event(e);
-}
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -54,8 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    //REF:ABOUT
-
+    // ===== ABOUT =====
     QScroller::grabGesture(ui->textBrowser->viewport(), QScroller::TouchGesture);
     ui->textBrowser->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
 
@@ -64,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
         "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
         );
-
     ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->textBrowser->setReadOnly(true);
     ui->textBrowser->setOpenExternalLinks(true);
@@ -105,22 +73,25 @@ responsabilidade do autor.</p>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
 )");
 
-    //REF:METRONOMO
+    // ===== METRONOME =====
     ui->lineEdit_metronome->setReadOnly(true);
     this->metro = new MetronomeWidget(this);
     metro->setBeatsPerMeasure(4);
     metro->setBpm(ui->lineEdit_metronome->text().toInt());
     metro->setAudioEnabled(true);
     metro->setAccentEnabled(true);
-    // adicionar no frame
-    auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout());
-    if (!lay) { lay = new QVBoxLayout(ui->frameMetro); lay->setContentsMargins(0,0,0,0); }
-    lay->addWidget(metro);
+
+    if (auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout())) {
+        lay->addWidget(metro);
+    } else {
+        auto *lay2 = new QVBoxLayout(ui->frameMetro);
+        lay2->setContentsMargins(0,0,0,0);
+        lay2->addWidget(metro);
+    }
 
     m_group = new QButtonGroup(this);
     b_group = new QButtonGroup(this);
 
-    //MEASURE GROUP ====================================
     m_group->addButton(ui->pushButton_2);
     m_group->addButton(ui->pushButton_3);
     m_group->addButton(ui->pushButton_4);
@@ -128,20 +99,17 @@ responsabilidade do autor.</p>
     m_group->setId(ui->pushButton_2,2);
     m_group->setId(ui->pushButton_3,3);
     m_group->setId(ui->pushButton_4,4);
-
     m_group->setExclusive(true);
 
     ui->pushButton_2->setCheckable(true);
     ui->pushButton_3->setCheckable(true);
     ui->pushButton_4->setCheckable(true);
-
     ui->pushButton_4->setChecked(true);
 
     connect(m_group, &QButtonGroup::idClicked, this, [this](int beats){
         metro->setBeatsPerMeasure(beats);
     });
 
-    //BPM GROUP ========================================
     b_group->addButton(ui->pushButton_less_one);
     b_group->addButton(ui->pushButton_less_10);
     b_group->addButton(ui->pushButton_plus_one);
@@ -152,19 +120,10 @@ responsabilidade do autor.</p>
     b_group->setId(ui->pushButton_plus_one,1);
     b_group->setId(ui->pushButton_plus_ten,10);
 
-
     connect(ui->pushButton_start, &QPushButton::clicked, metro, &MetronomeWidget::start);
     connect(ui->pushButton_stop,  &QPushButton::clicked, metro, &MetronomeWidget::stop);
 
-
-#ifdef Q_OS_ANDROID
-    keepScreenOn(true);
-    connect(qApp, &QGuiApplication::applicationStateChanged, this,
-            [](Qt::ApplicationState st){ if (st == Qt::ApplicationActive) keepScreenOn(true); });
-#endif
-
-
-    //REF:TUNER
+    // ===== TUNER =====
     m_tuner   = new TunerWidget(this);
     m_tracker = new PitchTracker(this);
 
@@ -172,31 +131,20 @@ responsabilidade do autor.</p>
     wireTunerSignals();
     setupToolBoxBehavior();
 
-    // 1) Ao abrir a janela: se a aba atual for TUNER, tenta iniciar
     QTimer::singleShot(0, this, [this]{
         if (ui->toolBox->currentIndex() == TUNER)
             startTunerWithPermission();
     });
 
-    // 2) Robustez: após diálogos e ao voltar ao app (1ª execução, etc.)
     connect(qApp, &QGuiApplication::applicationStateChanged,
             this, [this](Qt::ApplicationState st){
                 if (st == Qt::ApplicationActive && ui->toolBox->currentIndex() == TUNER)
                     startTunerWithPermission();
             });
 
-    //incremento/decremento do BPM
-    connect(b_group, &QButtonGroup::buttonClicked, this, &MainWindow::setBPMvalue);
-
-    //desligar metronomo se trocar de aba
-    connect(ui->toolBox, &QToolBox::currentChanged, this, [this](int idx){
-        if (ui->toolBox->currentIndex() != METRONOME && metro) metro->stop();
-    });
-
-    //=========================== REF:TONE ======================================================
+    // ===== NOTES SOUND =====
     this->toneGen = new ToneGenerator(this);
 
-    //------------------------------ octave up/down -------------------------------------
     ui->pushButton_octave_down->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
     ui->pushButton_octave_down->setIconSize(QSize(32, 32));
     ui->pushButton_octave_down->setProperty("moreOrLess",-1);
@@ -206,9 +154,7 @@ responsabilidade do autor.</p>
     ui->pushButton_octave_up->setIconSize(QSize(32, 32));
     ui->pushButton_octave_up->setProperty("moreOrLess",1);
     connect(ui->pushButton_octave_up,   &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveUp);
-    //------------------------------ octave up/down -------------------------------------
 
-    //------------------------------ note up/down ---------------------------------------
     ui->pushButton_previous->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
     ui->pushButton_previous->setIconSize(QSize(32, 32));
     ui->pushButton_previous->setProperty("moreOrLess",-1);
@@ -218,17 +164,13 @@ responsabilidade do autor.</p>
     ui->pushButton_next->setIconSize(QSize(32, 32));
     ui->pushButton_next->setProperty("moreOrLess",1);
     connect(ui->pushButton_next, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
-    //------------------------------ note up/down ---------------------------------------
 
-    //------------------------------ stop/start -----------------------------------------
     ui->pushButton_stop_2->setText(QString::fromUtf8("⏹︎"));
     connect(ui->pushButton_stop_2, &QPushButton::clicked, toneGen, &ToneGenerator::stop);
 
     ui->pushButton_start_2->setText(QString::fromUtf8("▶"));
     connect(ui->pushButton_start_2, &QPushButton::clicked, toneGen, &ToneGenerator::start);
-    //------------------------------ stop/start -----------------------------------------
 
-    //-----------------------------sustenido/bemol---------------------------------------
     ui->pushButton_sharp->setCheckable(true);
     ui->pushButton_bemol->setCheckable(true);
 
@@ -239,26 +181,19 @@ responsabilidade do autor.</p>
     ui->pushButton_bemol->setProperty("moreOrLess",-1);
 
     connect(ui->pushButton_sharp, &QPushButton::toggled, this, [=](bool on){
-    if (on) ui->pushButton_bemol->setChecked(false);
-    toneGen->setAccidental(on ? ToneGenerator::Sharp
-                              : (ui->pushButton_bemol->isChecked() ? ToneGenerator::Flat
-                                                                   : ToneGenerator::Natural));
-});
+        if (on) ui->pushButton_bemol->setChecked(false);
+        toneGen->setAccidental(on ? ToneGenerator::Sharp
+                                  : (ui->pushButton_bemol->isChecked() ? ToneGenerator::Flat
+                                                                       : ToneGenerator::Natural));
+    });
     connect(ui->pushButton_bemol, &QPushButton::toggled, this, [=](bool on){
-    if (on) ui->pushButton_sharp->setChecked(false);
-    toneGen->setAccidental(on ? ToneGenerator::Flat
-                              : (ui->pushButton_sharp->isChecked() ? ToneGenerator::Sharp
-                                                                   : ToneGenerator::Natural));
-});
+        if (on) ui->pushButton_sharp->setChecked(false);
+        toneGen->setAccidental(on ? ToneGenerator::Flat
+                                  : (ui->pushButton_sharp->isChecked() ? ToneGenerator::Sharp
+                                                                       : ToneGenerator::Natural));
+    });
 
-    //-----------------------------sustenido/bemol---------------------------------------
-
-
-    //-------------------------------- labels -------------------------------------------
-    //NOTA
     connect(toneGen, &ToneGenerator::noteLabelChanged, ui->lineEdit_notes, &QLineEdit::setText);
-
-    //FREQ
     connect(toneGen, &ToneGenerator::frequencyChanged, this, [=](double hz){
         ui->lineEdit_freq->setText(QString::number(hz, 'f', 2) + " Hz");
     });
@@ -266,44 +201,36 @@ responsabilidade do autor.</p>
     ui->lineEdit_notes->setReadOnly(true);
     ui->lineEdit_freq->setReadOnly(true);
 
-    //-------------------------------- labels -------------------------------------------
-
-    //connect(this,SIGNAL(noteIdx(int)),this->toneGen,SLOT(setNoteIndex(int)));
     connect(this, &MainWindow::noteIdx, this->toneGen, &ToneGenerator::setNoteIndex);
-
-    toneGen->setNoteIndex(toneGen->noteIndex());  // dispara noteLabelChanged("C4")
+    toneGen->setNoteIndex(toneGen->noteIndex());
     toneGen->setVolume(1.0f);
 
     connect(toneGen, &ToneGenerator::frequencyChanged, this, [](double hz){
         qDebug() << "[Tone] hz =" << hz;
     });
-    connect(ui->pushButton_start_2, &QPushButton::clicked, []{
-        qDebug() << "[Tone] START click";
-    });
 
-
-    //-------------- REF:STAFF ---------------------------------------------------------------
+    // ===== STAFF =====
     this->staff = new StaffNoteWidget(this);
-    staff->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps); // ou Flats/Auto
+    staff->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps);
     staff->setShowLabel(true);
 
     connect(toneGen, &ToneGenerator::frequencyChanged, staff,  &StaffNoteWidget::setFrequencyHz);
+    connect(toneGen, &ToneGenerator::frequencyChanged, this, [this](double hz){
+        if (staff) staff->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
+    });
 
-
-    connect(toneGen, &ToneGenerator::frequencyChanged,
-            this, [this](double hz){
-                if (staff)
-                    staff->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
-            });
-
-
-    this->staff->setColors(QColor("#121212"), QColor("#3C3C40"), QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+    this->staff->setColors(QColor("#121212"), QColor("#3C3C40"),
+                           QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
     this->setupStaffInFrame();
 
-    //=========================== REF:TONE ======================================================
-
-    //REF:ABOUT
+    // ===== DEFAULT TAB =====
     ui->toolBox->setCurrentIndex(PAGEINFO);
+}
+
+bool MainWindow::event(QEvent *e)
+{
+    // Nada especial aqui: os WindowInsets (topo/rodapé) são aplicados no Java.
+    return QMainWindow::event(e);
 }
 
 void MainWindow::setupStaffInFrame()
@@ -312,9 +239,8 @@ void MainWindow::setupStaffInFrame()
     if (!frame) return;
 
     if (!staff)
-        staff = new StaffNoteWidget(this);  // cria o widget
+        staff = new StaffNoteWidget(this);
 
-    // layout do frame (cria se não existir)
     auto *lay = qobject_cast<QVBoxLayout*>(frame->layout());
     if (!lay) {
         lay = new QVBoxLayout(frame);
@@ -323,7 +249,6 @@ void MainWindow::setupStaffInFrame()
         frame->setLayout(lay);
     }
 
-    // evita adicionar duas vezes
     if (staff->parentWidget() != frame) {
         staff->setClefImageFile(":/sol.png");
         staff->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -331,10 +256,9 @@ void MainWindow::setupStaffInFrame()
         staff->show();
     }
 
-    // (opcional) estilo/cores para combinar com o app
-    staff->setColors(QColor("#121212"), QColor("#3C3C40"), QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+    staff->setColors(QColor("#121212"), QColor("#3C3C40"),
+                     QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
 }
-
 
 void MainWindow::emitOctave()
 {
@@ -342,9 +266,7 @@ void MainWindow::emitOctave()
     if (!btn) return;
 
     int tmpValue = btn->property("moreOrLess").toInt()+octaveValue;
-    if (tmpValue < OCTAVEMIN || tmpValue > OCTAVEMAX){
-        return;
-    }
+    if (tmpValue < OCTAVEMIN || tmpValue > OCTAVEMAX) return;
 
     this->octaveValue = tmpValue;
     emit octaveIdx(this->octaveValue);
@@ -356,19 +278,15 @@ void MainWindow::emitNote()
     if (!btn) return;
 
     int tmpValue = btn->property("moreOrLess").toInt()+noteIdxValue;
-    if (tmpValue < NOTE_DO || tmpValue > NOTE_SI){
-        return;
-    }
+    if (tmpValue < NOTE_DO || tmpValue > NOTE_SI) return;
 
     this->noteIdxValue = tmpValue;
     emit noteIdx(this->noteIdxValue);
-
 }
 
 void MainWindow::setBPMvalue(QAbstractButton* button)
 {
     const int delta = b_group->id(button);
-
     constexpr int MIN_BPM = 30;
     constexpr int MAX_BPM = 300;
 
@@ -385,7 +303,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupTunerInFrame()
 {
-    // Coloca o TunerWidget no QFrame (objectName: frameTuner)
     QFrame* frame = ui->frameTuner;
     if (!frame || !m_tuner) return;
 
@@ -405,17 +322,14 @@ void MainWindow::setupTunerInFrame()
 
 void MainWindow::wireTunerSignals()
 {
-    // PitchTracker -> TunerWidget
     connect(m_tracker, &PitchTracker::noteUpdate,
             this, [this](int midi, double cents, double hz, double conf){
                 Q_UNUSED(conf);
                 if (!m_tuner) return;
                 m_tuner->setBaseMidi(midi);
                 m_tuner->setCents(cents);
-                // qDebug().nospace() << "[Pitch] Hz=" << hz << " midi=" << midi << " cents=" << cents;
             });
 
-    // logs opcionais
     connect(m_tracker, &PitchTracker::started, this, []{
         qDebug() << "[Tracker] started";
     });
@@ -423,7 +337,6 @@ void MainWindow::wireTunerSignals()
         qDebug() << "[Tracker] stopped";
     });
 
-    // parâmetros típicos para celular (ajuste se quiser)
     m_tracker->setMinFrequency(40.0);
     m_tracker->setMaxFrequency(1600.0);
     m_tracker->setAnalysisSize(4096);
@@ -433,7 +346,6 @@ void MainWindow::wireTunerSignals()
 
 void MainWindow::setupToolBoxBehavior()
 {
-    // Start/stop conforme a aba do QToolBox
     connect(ui->toolBox, &QToolBox::currentChanged, this, [this](int idx){
         if (idx == TUNER) startTunerWithPermission();
         else              m_tracker->stop();
@@ -443,10 +355,10 @@ void MainWindow::setupToolBoxBehavior()
 void MainWindow::startTunerWithPermission()
 {
 #ifdef Q_OS_ANDROID
-    QMicrophonePermission micPerm;  // vem de <QPermissions>
+    QMicrophonePermission micPerm;
     switch (qApp->checkPermission(micPerm)) {
     case Qt::PermissionStatus::Granted:
-        m_tracker->start();         // idempotente (start pode checar se já está rodando)
+        m_tracker->start();
         break;
     case Qt::PermissionStatus::Undetermined:
         qApp->requestPermission(micPerm, this,
@@ -465,7 +377,7 @@ void MainWindow::startTunerWithPermission()
 void MainWindow::onMicrophonePermissionChanged(const QPermission &perm)
 {
     if (perm.status() == Qt::PermissionStatus::Granted)
-        startTunerWithPermission();   // passa novamente pelo funil
+        startTunerWithPermission();
     else
         qDebug() << "[MicPerm] denied (callback)";
 }
