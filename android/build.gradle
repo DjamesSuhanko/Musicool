@@ -21,6 +21,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     //noinspection GradleDependency
     implementation 'androidx.core:core:1.16.0'
+    implementation 'androidx.activity:activity:1.9.0'   // EdgeToEdge.enable()
 }
 
 android {
