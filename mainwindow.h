@@ -71,6 +71,7 @@ private:
     void setupToolBoxBehavior();       // start/stop ao trocar de aba
     void wireTunerSignals();
     void setupStaffInFrame();
+    void reloadInsetsNow();
 
     int noteIdxValue = 0;
     int octaveValue  = 4;
@@ -83,6 +84,7 @@ signals:
 
 protected:
     bool event(QEvent *e) override;
+    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 
 };

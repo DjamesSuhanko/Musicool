@@ -18,5 +18,5 @@
         </provider>
     </application>
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.WAKE_LOCK"/>
 </manifest>

@@ -18,11 +18,135 @@
 #include <QScroller>
 
 
+#ifdef Q_OS_ANDROID
+#include <QtCore/qjniobject.h>
+#include <QtCore/qnativeinterface.h>
+
+static inline void keepScreenOnQt6(bool on = true)
+{
+    // Activity do Qt
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid()) return;
+
+    // Window da Activity
+    QJniObject window = activity.callObjectMethod("getWindow", "()Landroid/view/Window;");
+    if (!window.isValid()) return;
+
+    const jint FLAG_KEEP_SCREEN_ON = 128; // WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+
+    if (on) {
+        window.callMethod<void>("addFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+    } else {
+        window.callMethod<void>("clearFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+    }
+
+    // (opcional, ajuda em alguns aparelhos)
+    QJniObject decor = window.callObjectMethod("getDecorView", "()Landroid/view/View;");
+    if (decor.isValid()) {
+        decor.callMethod<void>("setKeepScreenOn", "(Z)V", jboolean(on));
+    }
+}
+#endif
+
+
+
+#ifdef Q_OS_ANDROID
+#include <QtCore/qnativeinterface.h>
+#include <QtCore/QJniObject>
+
+static inline QJniObject qtActivity() {
+    return QNativeInterface::QAndroidApplication::context();
+}
+
+static inline void jniRequestApplyInsets() {
+    if (auto act = qtActivity(); act.isValid()) {
+        QJniObject::callStaticMethod<void>(
+            "org/qtproject/example/EdgeToEdgeHelper",
+            "requestApplyInsets",
+            "(Landroid/app/Activity;)V",
+            act.object<jobject>());
+    }
+}
+
+static inline int jniBottomInsetPx() {
+    auto act = qtActivity();
+    if (!act.isValid()) return 0;
+    QJniObject arr = QJniObject::callStaticObjectMethod(
+        "org/qtproject/example/EdgeToEdgeHelper",
+        "getSystemBarInsets",
+        "(Landroid/app/Activity;)[I",
+        act.object<jobject>());
+    if (!arr.isValid()) return 0;
+    return QJniObject::callStaticMethod<jint>(
+        "java/lang/reflect/Array","getInt","(Ljava/lang/Object;I)I",
+        arr.object<jobject>(), 3); // bottom
+}
+#endif
+
+static void applyBottomInsetToFooterSpacer(QWidget* central) {
+#ifndef Q_OS_ANDROID
+    Q_UNUSED(central);
+#else
+    if (!central) return;
+
+    // Evita margem dupla no grid raiz
+    if (auto *grid = central->findChild<QGridLayout*>("gridLayout_3")) {
+        grid->setContentsMargins(10,40,10,40);
+        grid->setSpacing(0);
+    }
+
+    // No seu .ui, o spacer do rodapé é o ÚLTIMO item do verticalLayout_TUDO
+    if (auto *vTudo = central->findChild<QVBoxLayout*>("verticalLayout_TUDO")) {
+        if (vTudo->count() == 0) return;
+        if (QLayoutItem *last = vTudo->itemAt(vTudo->count()-1); last && last->spacerItem()) {
+            last->spacerItem()->changeSize(0, qMax(0, jniBottomInsetPx()),
+                                           QSizePolicy::Preferred, QSizePolicy::Fixed);
+            vTudo->invalidate();
+        }
+    }
+#endif
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *ev) {
+    switch (ev->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        reloadInsetsNow();
+        break;
+    default:
+        break;
+    }
+    return QMainWindow::eventFilter(obj, ev); // não consome, só reage
+}
+
+void MainWindow::reloadInsetsNow() {
+#ifdef Q_OS_ANDROID
+    // 1) pede novo dispatch de insets ao Android
+    jniRequestApplyInsets();
+
+    // 2) aplica imediatamente o inset atual ao spacer
+    applyBottomInsetToFooterSpacer(centralWidget());
+
+    // 3) reforço no próximo ciclo (caso o dispatch chegue um “tick” depois)
+    QTimer::singleShot(0, this, [this]{
+        applyBottomInsetToFooterSpacer(centralWidget());
+    });
+#endif
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    applyBottomInsetToFooterSpacer(ui->centralwidget);
+    keepScreenOnQt6(true);
+
+    qApp->installEventFilter(this);                  // captura toques em toda a app
+    centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
 
     // ===== ABOUT =====
     QScroller::grabGesture(ui->textBrowser->viewport(), QScroller::TouchGesture);
@@ -73,7 +197,7 @@ responsabilidade do autor.</p>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
 )");
 
-    // ===== METRONOME =====
+    // ===== REF:METRONOME =====
     ui->lineEdit_metronome->setReadOnly(true);
     this->metro = new MetronomeWidget(this);
     metro->setBeatsPerMeasure(4);
@@ -120,6 +244,11 @@ responsabilidade do autor.</p>
     b_group->setId(ui->pushButton_plus_one,1);
     b_group->setId(ui->pushButton_plus_ten,10);
 
+    connect(b_group,
+            qOverload<QAbstractButton*>(&QButtonGroup::buttonClicked),
+            this, &MainWindow::setBPMvalue);
+
+
     connect(ui->pushButton_start, &QPushButton::clicked, metro, &MetronomeWidget::start);
     connect(ui->pushButton_stop,  &QPushButton::clicked, metro, &MetronomeWidget::stop);
 
@@ -142,7 +271,7 @@ responsabilidade do autor.</p>
                     startTunerWithPermission();
             });
 
-    // ===== NOTES SOUND =====
+    // ===== REF:NOTES SOUND =====
     this->toneGen = new ToneGenerator(this);
 
     ui->pushButton_octave_down->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
