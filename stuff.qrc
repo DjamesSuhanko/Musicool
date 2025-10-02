@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>sol.png</file>
+        <file>imgs/MusicoolCapa.png</file>
+        <file>imgs/MusicoolCapaLineEdit.png</file>
     </qresource>
 </RCC>

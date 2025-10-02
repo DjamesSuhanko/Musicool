@@ -148,6 +148,34 @@ MainWindow::MainWindow(QWidget *parent)
     qApp->installEventFilter(this);                  // captura toques em toda a app
     centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
 
+    ui->labelMusicool->setAlignment(Qt::AlignCenter);
+    ui->labelMusicool->setMaximumHeight(128);
+    ui->labelMusicool->setMaximumWidth(256);
+    ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    QPixmap px(":/imgs/MusicoolCapa.png");
+    //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->labelMusicool->setPixmap(px);
+    ui->labelMusicool->setScaledContents(true);
+    ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
+    ui->labelMusicool->setStyleSheet(
+        "#labelMusicool {"
+        "  border: 2px solid #3C3C40;"
+        "  border-radius: 16px;"
+        "  background-color: #1e1f22;"
+        "}"
+        );
+
+    ui->lineEdit_metronome->setObjectName("lineEdit_metronome");
+    ui->lineEdit_metronome->setStyleSheet(
+        "#lineEdit_metronome {"
+        "  border-image: url(:/imgs/MusicoolCapaLineEdit.png) 0 0 0 0 stretch stretch;"
+        "  border: 1px solid #3C3C40;"   /* opcional: borda sobreposta */
+        "  border-radius: 12px;"
+        "  color: #eeeeee;"
+        "  padding: 6px;"
+        "}"
+        );
+
     // ===== ABOUT =====
     QScroller::grabGesture(ui->textBrowser->viewport(), QScroller::TouchGesture);
     ui->textBrowser->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);

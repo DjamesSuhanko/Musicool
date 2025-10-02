@@ -47,7 +47,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
          </font>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <property name="tabSpacing">
          <number>6</number>
@@ -92,7 +92,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>100</height>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="font">
@@ -103,7 +103,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  </font>
                 </property>
                 <property name="text">
-                 <string>Musicool</string>
+                 <string/>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignmentFlag::AlignCenter</set>

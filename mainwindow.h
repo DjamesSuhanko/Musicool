@@ -76,6 +76,8 @@ private:
     int noteIdxValue = 0;
     int octaveValue  = 4;
 
+    QPixmap m_logo;
+
 signals:
     void noteIdx(int v);
     void octaveIdx(int v);
