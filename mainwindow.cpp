@@ -136,6 +136,24 @@ void MainWindow::reloadInsetsNow() {
 #endif
 }
 
+void MainWindow::setupStaffInTuner()
+{
+    QFrame* f = ui->frameStaffTuner;
+    if (!f) return;
+
+    if (!m_staffTuner) {
+        m_staffTuner = new StaffNoteWidget(this);
+        m_staffTuner->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps); // ou Flats/Auto
+        m_staffTuner->setClefImageFile(":/sol.png");
+        // opcional: combinar com tema
+        // m_staffTuner->setColors(QColor("#121212"), QColor("#3C3C40"),
+        //                         QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+    }
+
+    auto *lay = qobject_cast<QVBoxLayout*>(f->layout());
+    if (!lay) { lay = new QVBoxLayout(f); lay->setContentsMargins(0,0,0,0); lay->setSpacing(0); }
+    if (m_staffTuner->parentWidget() != f) lay->addWidget(m_staffTuner);
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -147,6 +165,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     qApp->installEventFilter(this);                  // captura toques em toda a app
     centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
+
 
     ui->labelMusicool->setAlignment(Qt::AlignCenter);
     ui->labelMusicool->setMaximumHeight(128);
@@ -382,6 +401,22 @@ responsabilidade do autor.</p>
 
     // ===== DEFAULT TAB =====
     ui->toolBox->setCurrentIndex(PAGEINFO);
+
+    // ======= REF:STAFF TUNER =========
+    setupStaffInTuner();
+
+    // Atualiza a pauta quando o tracker detecta tom
+    connect(m_tracker, &PitchTracker::noteUpdate,
+            this, [this](int midi, double cents, double hz, double conf){
+        // filtro simples para evitar “tremidas” em silêncio/baixa confiança
+        if (conf < 0.5 || hz <= 0.0) return;
+
+        // 1) por MIDI (mais estável para desenho)
+        if (m_staffTuner) m_staffTuner->setMidi(midi, StaffNoteWidget::AccPref::Sharps);
+
+        // 2) (opcional) por Hz — se quiser refletir microvariações
+        // if (m_staffTuner) m_staffTuner->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
+    });
 }
 
 bool MainWindow::event(QEvent *e)
