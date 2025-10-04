@@ -24,6 +24,7 @@ HEADERS += \
     metronomewidget.h \
     pitchtracker.h \
     staffnotewidget.h \
+    theme.h \
     tonegenerator.h \
     tunerwidget.h
 

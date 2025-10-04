@@ -12,7 +12,7 @@ PitchTracker::PitchTracker(QObject* parent)
     : QObject(parent)
 {
     // Não definimos device/format aqui para não depender de permissão;
-    // fazemos isso em start().
+    // fazer isso em start().
     m_fifo.reserve(m_sampleRate); // ~1s
 }
 

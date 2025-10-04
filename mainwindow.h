@@ -20,7 +20,7 @@
 
 #define PAGEINFO  0
 #define TUNER     1
-#define GENFREQ   2
+#define FREQUENCY 2
 #define METRONOME 3
 
 #define OCTAVEMIN 2
@@ -74,6 +74,7 @@ private:
     void setupStaffInFrame();
     void reloadInsetsNow();
     void setupStaffInTuner();
+    void onToolBoxIndexChanged(int idx);
 
     int noteIdxValue = 0;
     int octaveValue  = 4;

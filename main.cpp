@@ -1,14 +1,19 @@
 #include "mainwindow.h"
 #include <QApplication>
-
+#include <QStyleFactory>
 #ifdef Q_OS_ANDROID
 #include <QtCore/qnativeinterface.h>
 #include <QtCore/QJniObject>
 #endif
+#include "theme.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
+    QApplication::setPalette(Theme::darkPalette());
+    qApp->setStyleSheet(Theme::globalQss());
 
 #ifdef Q_OS_ANDROID
     if (QJniObject activity = QNativeInterface::QAndroidApplication::context(); activity.isValid()) {

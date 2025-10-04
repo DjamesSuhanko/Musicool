@@ -16,7 +16,7 @@
 #include <QStyleOptionSlider>
 #include <QProxyStyle>
 #include <QScroller>
-
+#include <theme.h>
 
 #ifdef Q_OS_ANDROID
 #include <QtCore/qjniobject.h>
@@ -160,6 +160,23 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //-- forçar cor clara dos textos - START -----
+    qApp->setStyleSheet(R"(
+  QWidget { background: #121212; }
+  * { color: #EEEEEE; } /* texto claro por padrão */
+  QLineEdit, QTextEdit, QTextBrowser, QPlainTextEdit {
+    background: #1A1B1E;
+    selection-background-color: #4F8AFF;
+    selection-color: #FFFFFF;
+  }
+  QToolTip { color: #121212; background: #EEEEEE; })");
+
+    ui->textBrowser->document()->setDefaultStyleSheet("body{color:#EEEEEE;}");
+
+    //-- forçar cor clara dos textos - END ------
+
+
     applyBottomInsetToFooterSpacer(ui->centralwidget);
     keepScreenOnQt6(true);
 
@@ -209,7 +226,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textBrowser->setOpenExternalLinks(true);
     ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->textBrowser->setHtml(R"(
-<h2>About the Musicool</h2>
+<h2>Sobre o Musicool</h2>
 <p align='justify'>Esse aplicativo foi desenvolvido para ser usado
 por músicos da CCB, por isso é um aplicativo sem
 custo e em constante evolução.</p>
@@ -220,12 +237,12 @@ para você. Apenas diga 1 vez em voz alta:<br>
 
 <h2>Tuner</h2>
 <p>O Tuner tem o propósito de afinar instrumentos de sopro.
-Deve funcionar também com violino, viola e chello.
+Deve funcionar também com violino, viola e celo.
 Ao clicar em <b>Tuner</b>, o microfone precisará ser
 aberto pelo aplicativo para 'escutar' seu instrumento.
 Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
 
-<h2>Notes Sound</h2>
+<h2>Frequency</h2>
 <p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
 É possível também usar bemol e sustenido, trocar de nota ou de oitava,
 através dos botões.<br>
@@ -421,7 +438,12 @@ responsabilidade do autor.</p>
 
 bool MainWindow::event(QEvent *e)
 {
-    // Nada especial aqui: os WindowInsets (topo/rodapé) são aplicados no Java.
+    // if (e->type() == QEvent::ApplicationPaletteChange ||
+    //     e->type() == QEvent::StyleChange ||
+    //     e->type() == QEvent::ThemeChange) {
+    //     QApplication::setPalette(Theme::darkPalette());
+    //     qApp->setStyleSheet(Theme::globalQss());
+    // }
     return QMainWindow::event(e);
 }
 
@@ -538,11 +560,26 @@ void MainWindow::wireTunerSignals()
 
 void MainWindow::setupToolBoxBehavior()
 {
-    connect(ui->toolBox, &QToolBox::currentChanged, this, [this](int idx){
-        if (idx == TUNER) startTunerWithPermission();
-        else              m_tracker->stop();
-    });
+    // aplica estado já na abertura
+    onToolBoxIndexChanged(ui->toolBox->currentIndex());
+
+    // agora sim: UniqueConnection OK, pois é slot membro
+    connect(ui->toolBox, &QToolBox::currentChanged,
+            this, &MainWindow::onToolBoxIndexChanged,
+            Qt::UniqueConnection);
 }
+
+void MainWindow::onToolBoxIndexChanged(int idx)
+{
+    // Tuner
+    if (idx == TUNER)  startTunerWithPermission();
+    else if (m_tracker) m_tracker->stop();
+
+    // Metronome: pare sempre que a aba ativa NÃO for o metrônomo
+    if (idx != METRONOME && metro) metro->stop();
+    if (idx != FREQUENCY && toneGen) toneGen->stop();
+}
+
 
 void MainWindow::startTunerWithPermission()
 {
