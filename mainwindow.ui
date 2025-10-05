@@ -427,7 +427,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                  <set>Qt::InputMethodHint::ImhNone</set>
                 </property>
                 <property name="text">
-                 <string>La4</string>
+                 <string>LA4</string>
                 </property>
                 <property name="maxLength">
                  <number>8</number>
