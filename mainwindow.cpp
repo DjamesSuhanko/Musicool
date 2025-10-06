@@ -313,13 +313,13 @@ responsabilidade do autor.</p>
             this, &MainWindow::setBPMvalue);
 
 
-    ui->pushButton_stop->setText("");
+    ui->pushButton_stop->setText("Stop");
     ui->pushButton_stop->setIcon(QIcon(":/imgs/stop.png"));
-    ui->pushButton_stop->setIconSize(QSize(32, 32));
+    ui->pushButton_stop->setIconSize(QSize(16, 16));
 
-    ui->pushButton_start->setText("");
+    ui->pushButton_start->setText("Start");
     ui->pushButton_start->setIcon(QIcon(":/imgs/play.png"));
-    ui->pushButton_start->setIconSize(QSize(32, 32));
+    ui->pushButton_start->setIconSize(QSize(16, 16));
 
     connect(ui->pushButton_start, &QPushButton::clicked, metro, &MetronomeWidget::start);
     connect(ui->pushButton_stop,  &QPushButton::clicked, metro, &MetronomeWidget::stop);
@@ -347,33 +347,33 @@ responsabilidade do autor.</p>
     this->toneGen = new ToneGenerator(this);
 
     ui->pushButton_octave_down->setIcon(QIcon(":/imgs/arrowD.png"));
-    ui->pushButton_octave_down->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_down->setIconSize(QSize(16, 16));
     ui->pushButton_octave_down->setProperty("moreOrLess",-1);
     connect(ui->pushButton_octave_down, &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveDown);
 
     ui->pushButton_octave_up->setIcon(QIcon(":/imgs/arrowU.png"));
-    ui->pushButton_octave_up->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_up->setIconSize(QSize(16, 16));
     ui->pushButton_octave_up->setProperty("moreOrLess",1);
     connect(ui->pushButton_octave_up,   &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveUp);
 
     ui->pushButton_previous->setIcon(QIcon(":/imgs/arrowL.png"));
-    ui->pushButton_previous->setIconSize(QSize(32, 32));
+    ui->pushButton_previous->setIconSize(QSize(16, 16));
     ui->pushButton_previous->setProperty("moreOrLess",-1);
     connect(ui->pushButton_previous, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
 
     ui->pushButton_next->setIcon(QIcon(":/imgs/arrowR.png"));
-    ui->pushButton_next->setIconSize(QSize(32, 32));
+    ui->pushButton_next->setIconSize(QSize(16, 16));
     ui->pushButton_next->setProperty("moreOrLess",1);
     connect(ui->pushButton_next, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
 
     ui->pushButton_stop_2->setText("");
     ui->pushButton_stop_2->setIcon(QIcon(":/imgs/stop.png"));
-    ui->pushButton_stop_2->setIconSize(QSize(32, 32));
+    ui->pushButton_stop_2->setIconSize(QSize(16, 16));
     connect(ui->pushButton_stop_2, &QPushButton::clicked, toneGen, &ToneGenerator::stop);
 
     ui->pushButton_start_2->setText("");
     ui->pushButton_start_2->setIcon(QIcon(":/imgs/play.png"));
-    ui->pushButton_start_2->setIconSize(QSize(32, 32));
+    ui->pushButton_start_2->setIconSize(QSize(16, 16));
     connect(ui->pushButton_start_2, &QPushButton::clicked, toneGen, &ToneGenerator::start);
 
     ui->pushButton_sharp->setCheckable(true);
