@@ -10,8 +10,6 @@
 #include <QPermission>
 #include <QTimer>
 #include <QButtonGroup>
-
-//TODO: teste
 #include "staffnotewidget.h"
 
 #ifdef Q_OS_ANDROID
@@ -52,7 +50,7 @@ private slots:
     void onMicrophonePermissionChanged(const QPermission &perm);
     void setBPMvalue(QAbstractButton* button);
     void emitNote(); //conectar com os botoes de nota; identificar o botão e somar/subtrair, considerando >0 e <7
-    void emitOctave(); // TODO: tratar N oitavas
+    void emitOctave();
 
 private:
     Ui::MainWindow *ui;

@@ -14,7 +14,7 @@ public:
     explicit PitchTracker(QObject* parent = nullptr);
     ~PitchTracker();
 
-    // Configurações básicas (chame antes de start(), se quiser alterar)
+    // Configurações básicas (chamar antes de start(), se quiser alterar)
     void setMinFrequency(double hz);     // default: 60 Hz
     void setMaxFrequency(double hz);     // default: 1200 Hz
     void setAnalysisSize(int samples);   // default: 4096
@@ -23,7 +23,7 @@ public:
 
 public slots:
     bool start();   // inicia microfone; retorna false se falhar
-    void stop();    // para microfone
+    void stop();    // parar microfone
 
 signals:
     void started();
