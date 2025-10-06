@@ -1,5 +1,13 @@
 <RCC>
     <qresource prefix="/">
         <file>sol.png</file>
+        <file>imgs/MusicoolCapa.png</file>
+        <file>imgs/MusicoolCapaLineEdit.png</file>
+        <file>imgs/arrowR.png</file>
+        <file>imgs/arrowD.png</file>
+        <file>imgs/arrowL.png</file>
+        <file>imgs/arrowU.png</file>
+        <file>imgs/play.png</file>
+        <file>imgs/stop.png</file>
     </qresource>
 </RCC>

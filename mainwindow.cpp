@@ -16,13 +16,201 @@
 #include <QStyleOptionSlider>
 #include <QProxyStyle>
 #include <QScroller>
+#include <theme.h>
 
+#ifdef Q_OS_ANDROID
+#include <QtCore/qjniobject.h>
+#include <QtCore/qnativeinterface.h>
+
+static inline void keepScreenOnQt6(bool on = true)
+{
+    // Activity do Qt
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid()) return;
+
+    // Window da Activity
+    QJniObject window = activity.callObjectMethod("getWindow", "()Landroid/view/Window;");
+    if (!window.isValid()) return;
+
+    const jint FLAG_KEEP_SCREEN_ON = 128; // WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+
+    if (on) {
+        window.callMethod<void>("addFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+    } else {
+        window.callMethod<void>("clearFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+    }
+
+    // (opcional, ajuda em alguns aparelhos)
+    QJniObject decor = window.callObjectMethod("getDecorView", "()Landroid/view/View;");
+    if (decor.isValid()) {
+        decor.callMethod<void>("setKeepScreenOn", "(Z)V", jboolean(on));
+    }
+}
+#endif
+
+
+
+#ifdef Q_OS_ANDROID
+#include <QtCore/qnativeinterface.h>
+#include <QtCore/QJniObject>
+
+static inline QJniObject qtActivity() {
+    return QNativeInterface::QAndroidApplication::context();
+}
+
+static inline void jniRequestApplyInsets() {
+    if (auto act = qtActivity(); act.isValid()) {
+        QJniObject::callStaticMethod<void>(
+            "org/qtproject/example/EdgeToEdgeHelper",
+            "requestApplyInsets",
+            "(Landroid/app/Activity;)V",
+            act.object<jobject>());
+    }
+}
+
+static inline int jniBottomInsetPx() {
+    auto act = qtActivity();
+    if (!act.isValid()) return 0;
+    QJniObject arr = QJniObject::callStaticObjectMethod(
+        "org/qtproject/example/EdgeToEdgeHelper",
+        "getSystemBarInsets",
+        "(Landroid/app/Activity;)[I",
+        act.object<jobject>());
+    if (!arr.isValid()) return 0;
+    return QJniObject::callStaticMethod<jint>(
+        "java/lang/reflect/Array","getInt","(Ljava/lang/Object;I)I",
+        arr.object<jobject>(), 3); // bottom
+}
+#endif
+
+static void applyBottomInsetToFooterSpacer(QWidget* central) {
+#ifndef Q_OS_ANDROID
+    Q_UNUSED(central);
+#else
+    if (!central) return;
+
+    // Evita margem dupla no grid raiz
+    if (auto *grid = central->findChild<QGridLayout*>("gridLayout_3")) {
+        grid->setContentsMargins(10,40,10,40);
+        grid->setSpacing(0);
+    }
+
+    // No seu .ui, o spacer do rodapé é o ÚLTIMO item do verticalLayout_TUDO
+    if (auto *vTudo = central->findChild<QVBoxLayout*>("verticalLayout_TUDO")) {
+        if (vTudo->count() == 0) return;
+        if (QLayoutItem *last = vTudo->itemAt(vTudo->count()-1); last && last->spacerItem()) {
+            last->spacerItem()->changeSize(0, qMax(0, jniBottomInsetPx()),
+                                           QSizePolicy::Preferred, QSizePolicy::Fixed);
+            vTudo->invalidate();
+        }
+    }
+#endif
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *ev) {
+    switch (ev->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+        reloadInsetsNow();
+        break;
+    default:
+        break;
+    }
+    return QMainWindow::eventFilter(obj, ev); // não consome, só reage
+}
+
+void MainWindow::reloadInsetsNow() {
+#ifdef Q_OS_ANDROID
+    // 1) pede novo dispatch de insets ao Android
+    jniRequestApplyInsets();
+
+    // 2) aplica imediatamente o inset atual ao spacer
+    applyBottomInsetToFooterSpacer(centralWidget());
+
+    // 3) reforço no próximo ciclo (caso o dispatch chegue um “tick” depois)
+    QTimer::singleShot(0, this, [this]{
+        applyBottomInsetToFooterSpacer(centralWidget());
+    });
+#endif
+}
+
+void MainWindow::setupStaffInTuner()
+{
+    QFrame* f = ui->frameStaffTuner;
+    if (!f) return;
+
+    if (!m_staffTuner) {
+        m_staffTuner = new StaffNoteWidget(this);
+        m_staffTuner->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps); // ou Flats/Auto
+        m_staffTuner->setClefImageFile(":/sol.png");
+        // opcional: combinar com tema
+        // m_staffTuner->setColors(QColor("#121212"), QColor("#3C3C40"),
+        //                         QColor("#FAFAFA"), QColor("#4F8AFF"), QColor("#E0E0E0"));
+    }
+
+    auto *lay = qobject_cast<QVBoxLayout*>(f->layout());
+    if (!lay) { lay = new QVBoxLayout(f); lay->setContentsMargins(0,0,0,0); lay->setSpacing(0); }
+    if (m_staffTuner->parentWidget() != f) lay->addWidget(m_staffTuner);
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //-- forçar cor clara dos textos - START -----
+    qApp->setStyleSheet(R"(
+  QWidget { background: #121212; }
+  * { color: #EEEEEE; } /* texto claro por padrão */
+  QLineEdit, QTextEdit, QTextBrowser, QPlainTextEdit {
+    background: #1A1B1E;
+    selection-background-color: #4F8AFF;
+    selection-color: #FFFFFF;
+  }
+  QToolTip { color: #121212; background: #EEEEEE; })");
+
+    ui->textBrowser->document()->setDefaultStyleSheet("body{color:#EEEEEE;}");
+
+    //-- forçar cor clara dos textos - END ------
+
+
+    applyBottomInsetToFooterSpacer(ui->centralwidget);
+    keepScreenOnQt6(true);
+
+    qApp->installEventFilter(this);                  // captura toques em toda a app
+    centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
+
+
+    ui->labelMusicool->setAlignment(Qt::AlignCenter);
+    ui->labelMusicool->setMaximumHeight(128);
+    ui->labelMusicool->setMaximumWidth(256);
+    ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    QPixmap px(":/imgs/MusicoolCapa.png");
+    //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->labelMusicool->setPixmap(px);
+    ui->labelMusicool->setScaledContents(true);
+    ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
+    ui->labelMusicool->setStyleSheet(
+        "#labelMusicool {"
+        "  border: 2px solid #3C3C40;"
+        "  border-radius: 16px;"
+        "  background-color: #1e1f22;"
+        "}"
+        );
+
+    ui->lineEdit_metronome->setObjectName("lineEdit_metronome");
+    ui->lineEdit_metronome->setStyleSheet(
+        "#lineEdit_metronome {"
+        "  border-image: url(:/imgs/MusicoolCapaLineEdit.png) 0 0 0 0 stretch stretch;"
+        "  border: 1px solid #3C3C40;"   /* opcional: borda sobreposta */
+        "  border-radius: 12px;"
+        "  color: #eeeeee;"
+        "  padding: 6px;"
+        "}"
+        );
 
     // ===== ABOUT =====
     QScroller::grabGesture(ui->textBrowser->viewport(), QScroller::TouchGesture);
@@ -38,7 +226,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textBrowser->setOpenExternalLinks(true);
     ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->textBrowser->setHtml(R"(
-<h2>About the Musicool</h2>
+<h2>Sobre o Musicool</h2>
 <p align='justify'>Esse aplicativo foi desenvolvido para ser usado
 por músicos da CCB, por isso é um aplicativo sem
 custo e em constante evolução.</p>
@@ -49,12 +237,12 @@ para você. Apenas diga 1 vez em voz alta:<br>
 
 <h2>Tuner</h2>
 <p>O Tuner tem o propósito de afinar instrumentos de sopro.
-Deve funcionar também com violino, viola e chello.
+Deve funcionar também com violino, viola e celo.
 Ao clicar em <b>Tuner</b>, o microfone precisará ser
 aberto pelo aplicativo para 'escutar' seu instrumento.
 Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
 
-<h2>Notes Sound</h2>
+<h2>Frequency</h2>
 <p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
 É possível também usar bemol e sustenido, trocar de nota ou de oitava,
 através dos botões.<br>
@@ -73,7 +261,7 @@ responsabilidade do autor.</p>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
 )");
 
-    // ===== METRONOME =====
+    // ===== REF:METRONOME =====
     ui->lineEdit_metronome->setReadOnly(true);
     this->metro = new MetronomeWidget(this);
     metro->setBeatsPerMeasure(4);
@@ -120,6 +308,19 @@ responsabilidade do autor.</p>
     b_group->setId(ui->pushButton_plus_one,1);
     b_group->setId(ui->pushButton_plus_ten,10);
 
+    connect(b_group,
+            qOverload<QAbstractButton*>(&QButtonGroup::buttonClicked),
+            this, &MainWindow::setBPMvalue);
+
+
+    ui->pushButton_stop->setText("Stop");
+    ui->pushButton_stop->setIcon(QIcon(":/imgs/stop.png"));
+    ui->pushButton_stop->setIconSize(QSize(16, 16));
+
+    ui->pushButton_start->setText("Start");
+    ui->pushButton_start->setIcon(QIcon(":/imgs/play.png"));
+    ui->pushButton_start->setIconSize(QSize(16, 16));
+
     connect(ui->pushButton_start, &QPushButton::clicked, metro, &MetronomeWidget::start);
     connect(ui->pushButton_stop,  &QPushButton::clicked, metro, &MetronomeWidget::stop);
 
@@ -142,33 +343,37 @@ responsabilidade do autor.</p>
                     startTunerWithPermission();
             });
 
-    // ===== NOTES SOUND =====
+    // ===== REF:NOTES SOUND =====
     this->toneGen = new ToneGenerator(this);
 
-    ui->pushButton_octave_down->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-    ui->pushButton_octave_down->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_down->setIcon(QIcon(":/imgs/arrowD.png"));
+    ui->pushButton_octave_down->setIconSize(QSize(16, 16));
     ui->pushButton_octave_down->setProperty("moreOrLess",-1);
     connect(ui->pushButton_octave_down, &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveDown);
 
-    ui->pushButton_octave_up->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-    ui->pushButton_octave_up->setIconSize(QSize(32, 32));
+    ui->pushButton_octave_up->setIcon(QIcon(":/imgs/arrowU.png"));
+    ui->pushButton_octave_up->setIconSize(QSize(16, 16));
     ui->pushButton_octave_up->setProperty("moreOrLess",1);
     connect(ui->pushButton_octave_up,   &QPushButton::clicked, this->toneGen, &ToneGenerator::octaveUp);
 
-    ui->pushButton_previous->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
-    ui->pushButton_previous->setIconSize(QSize(32, 32));
+    ui->pushButton_previous->setIcon(QIcon(":/imgs/arrowL.png"));
+    ui->pushButton_previous->setIconSize(QSize(16, 16));
     ui->pushButton_previous->setProperty("moreOrLess",-1);
     connect(ui->pushButton_previous, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
 
-    ui->pushButton_next->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-    ui->pushButton_next->setIconSize(QSize(32, 32));
+    ui->pushButton_next->setIcon(QIcon(":/imgs/arrowR.png"));
+    ui->pushButton_next->setIconSize(QSize(16, 16));
     ui->pushButton_next->setProperty("moreOrLess",1);
     connect(ui->pushButton_next, SIGNAL(clicked(bool)),this, SLOT(emitNote()));
 
-    ui->pushButton_stop_2->setText(QString::fromUtf8("⏹︎"));
+    ui->pushButton_stop_2->setText("");
+    ui->pushButton_stop_2->setIcon(QIcon(":/imgs/stop.png"));
+    ui->pushButton_stop_2->setIconSize(QSize(16, 16));
     connect(ui->pushButton_stop_2, &QPushButton::clicked, toneGen, &ToneGenerator::stop);
 
-    ui->pushButton_start_2->setText(QString::fromUtf8("▶"));
+    ui->pushButton_start_2->setText("");
+    ui->pushButton_start_2->setIcon(QIcon(":/imgs/play.png"));
+    ui->pushButton_start_2->setIconSize(QSize(16, 16));
     connect(ui->pushButton_start_2, &QPushButton::clicked, toneGen, &ToneGenerator::start);
 
     ui->pushButton_sharp->setCheckable(true);
@@ -225,11 +430,32 @@ responsabilidade do autor.</p>
 
     // ===== DEFAULT TAB =====
     ui->toolBox->setCurrentIndex(PAGEINFO);
+
+    // ======= REF:STAFF TUNER =========
+    setupStaffInTuner();
+
+    // Atualiza a pauta quando o tracker detecta tom
+    connect(m_tracker, &PitchTracker::noteUpdate,
+            this, [this](int midi, double cents, double hz, double conf){
+        // filtro simples para evitar “tremidas” em silêncio/baixa confiança
+        if (conf < 0.5 || hz <= 0.0) return;
+
+        // 1) por MIDI (mais estável para desenho)
+        if (m_staffTuner) m_staffTuner->setMidi(midi, StaffNoteWidget::AccPref::Sharps);
+
+        // 2) (opcional) por Hz — se quiser refletir microvariações
+        // if (m_staffTuner) m_staffTuner->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
+    });
 }
 
 bool MainWindow::event(QEvent *e)
 {
-    // Nada especial aqui: os WindowInsets (topo/rodapé) são aplicados no Java.
+    // if (e->type() == QEvent::ApplicationPaletteChange ||
+    //     e->type() == QEvent::StyleChange ||
+    //     e->type() == QEvent::ThemeChange) {
+    //     QApplication::setPalette(Theme::darkPalette());
+    //     qApp->setStyleSheet(Theme::globalQss());
+    // }
     return QMainWindow::event(e);
 }
 
@@ -346,11 +572,26 @@ void MainWindow::wireTunerSignals()
 
 void MainWindow::setupToolBoxBehavior()
 {
-    connect(ui->toolBox, &QToolBox::currentChanged, this, [this](int idx){
-        if (idx == TUNER) startTunerWithPermission();
-        else              m_tracker->stop();
-    });
+    // aplica estado já na abertura
+    onToolBoxIndexChanged(ui->toolBox->currentIndex());
+
+    // agora sim: UniqueConnection OK, pois é slot membro
+    connect(ui->toolBox, &QToolBox::currentChanged,
+            this, &MainWindow::onToolBoxIndexChanged,
+            Qt::UniqueConnection);
 }
+
+void MainWindow::onToolBoxIndexChanged(int idx)
+{
+    // Tuner
+    if (idx == TUNER)  startTunerWithPermission();
+    else if (m_tracker) m_tracker->stop();
+
+    // Metronome: pare sempre que a aba ativa NÃO for o metrônomo
+    if (idx != METRONOME && metro) metro->stop();
+    if (idx != FREQUENCY && toneGen) toneGen->stop();
+}
+
 
 void MainWindow::startTunerWithPermission()
 {

@@ -20,7 +20,7 @@
 
 #define PAGEINFO  0
 #define TUNER     1
-#define GENFREQ   2
+#define FREQUENCY 2
 #define METRONOME 3
 
 #define OCTAVEMIN 2
@@ -57,11 +57,12 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    PitchTracker  *m_tracker = nullptr;
-    TunerWidget  *m_tuner    = nullptr;
-    MetronomeWidget *metro   = nullptr;
-    ToneGenerator *toneGen   = nullptr;
-    StaffNoteWidget *staff   = nullptr;
+    PitchTracker  *m_tracker      = nullptr;
+    TunerWidget  *m_tuner         = nullptr;
+    MetronomeWidget *metro        = nullptr;
+    ToneGenerator *toneGen        = nullptr;
+    StaffNoteWidget *staff        = nullptr;
+    StaffNoteWidget* m_staffTuner = nullptr;
 
     QButtonGroup *m_group    = nullptr; // measure
     QButtonGroup *b_group    = nullptr; // bpm
@@ -71,9 +72,14 @@ private:
     void setupToolBoxBehavior();       // start/stop ao trocar de aba
     void wireTunerSignals();
     void setupStaffInFrame();
+    void reloadInsetsNow();
+    void setupStaffInTuner();
+    void onToolBoxIndexChanged(int idx);
 
     int noteIdxValue = 0;
     int octaveValue  = 4;
+
+    QPixmap m_logo;
 
 signals:
     void noteIdx(int v);
@@ -83,6 +89,7 @@ signals:
 
 protected:
     bool event(QEvent *e) override;
+    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 
 };

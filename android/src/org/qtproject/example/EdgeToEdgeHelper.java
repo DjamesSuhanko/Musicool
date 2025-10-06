@@ -21,6 +21,7 @@ import java.util.List;
 
 public final class EdgeToEdgeHelper {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     // WakeLock para Samsung/One UI que ignora KEEP_SCREEN_ON às vezes
     private static PowerManager.WakeLock sWakeLock;
@@ -137,5 +138,21 @@ public final class EdgeToEdgeHelper {
             if (sWakeLock != null && sWakeLock.isHeld()) sWakeLock.release();
         } catch (Throwable ignore) {}
         sWakeLock = null;
+    }
+
+    public static int[] getSystemBarInsets(Activity activity) {
+        final View root = activity.getWindow().getDecorView();
+        final WindowInsetsCompat wi = ViewCompat.getRootWindowInsets(root);
+        if (wi == null) return new int[]{0,0,0,0};
+        final Insets in = wi.getInsets(WindowInsetsCompat.Type.systemBars());
+        return new int[]{ in.left, in.top, in.right, in.bottom };
+    }
+
+    public static void requestApplyInsets(Activity activity) {
+        final View root = activity.getWindow().getDecorView();
+        root.requestApplyInsets();
+        // redundância útil para Android 15 / One UI:
+        View content = root.findViewById(android.R.id.content);
+        if (content != null) content.requestApplyInsets();
     }
 }
