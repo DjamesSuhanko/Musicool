@@ -59,5 +59,5 @@ RESOURCES += \
 
 # Só 64-bit (Play exige 64-bit)
 ANDROID_ABIS = arm64-v8a
-VERSION = 2.6.0           # vira versionName
-ANDROID_VERSION_CODE = 8  # inteiro crescente a cada release
+VERSION = 2.7.0           # vira versionName
+ANDROID_VERSION_CODE = 9  # inteiro crescente a cada release

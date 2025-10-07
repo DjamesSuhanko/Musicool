@@ -687,7 +687,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="0" column="0">
-           <layout class="QGridLayout" name="gridLayout_19">
+           <layout class="QGridLayout" name="gridLayout_METRO">
             <item row="1" column="0">
              <layout class="QGridLayout" name="gridLayout_9">
               <property name="verticalSpacing">

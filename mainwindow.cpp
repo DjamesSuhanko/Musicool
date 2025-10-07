@@ -308,8 +308,9 @@ responsabilidade do autor.</p>
     } else {
         auto *lay2 = new QVBoxLayout(ui->frameMetro);
         lay2->setContentsMargins(0,0,0,0);
-        lay2->addWidget(metro);
+        lay2->addWidget(metro, 0, Qt::AlignVCenter);
     }
+
 
     //metro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
     //ui->frameMetro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);

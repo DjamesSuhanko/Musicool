@@ -13,6 +13,7 @@ static inline int clampInt(int v, int lo, int hi) { return v < lo ? lo : (v > hi
 static inline float lerp(float a, float b, float t) { return a + (b - a) * t; }
 // ------------------------------------
 
+
 MetronomeWidget::MetronomeWidget(QWidget *parent)
     : QWidget(parent)
 {
