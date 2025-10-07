@@ -74,6 +74,10 @@ private:
     void setupStaffInTuner();
     void onToolBoxIndexChanged(int idx);
 
+    void setupStackNavigation();      // conecta botões e sinal do stack
+    void updateStackTitle() const;    // joga o título atual no lineEdit
+    QString currentPageTitle() const; // busca título da página atual
+
     int noteIdxValue = 0;
     int octaveValue  = 4;
 

@@ -161,6 +161,20 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    setupStackNavigation();
+    updateStackTitle();
+
+    //REF:STACK
+    ui->pushButton_stackBack->setText("");
+    ui->pushButton_stackBack->setIcon(QIcon(":/imgs/arrowL.png"));
+    ui->pushButton_stackBack->setIconSize(QSize(16, 16));
+    ui->pushButton_stackNext->setText("");
+    ui->pushButton_stackNext->setIcon(QIcon(":/imgs/arrowR.png"));
+    ui->pushButton_stackNext->setIconSize(QSize(16, 16));
+
+    ui->stackWidget->widget(0)->setProperty("title", "About");
+    ui->stackWidget->widget(1)->setProperty("title", "Claves");
+
     ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
                               QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)
                               QColor("#B0B0B0"),  // ticks
@@ -218,22 +232,22 @@ MainWindow::MainWindow(QWidget *parent)
     centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
 
 
-    ui->labelMusicool->setAlignment(Qt::AlignCenter);
-    ui->labelMusicool->setMaximumHeight(128);
-    ui->labelMusicool->setMaximumWidth(256);
-    ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    QPixmap px(":/imgs/MusicoolCapa.png");
-    //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    ui->labelMusicool->setPixmap(px);
-    ui->labelMusicool->setScaledContents(true);
-    ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
-    ui->labelMusicool->setStyleSheet(
-        "#labelMusicool {"
-        "  border: 2px solid #3C3C40;"
-        "  border-radius: 16px;"
-        "  background-color: #1e1f22;"
-        "}"
-        );
+    // ui->labelMusicool->setAlignment(Qt::AlignCenter);
+    // ui->labelMusicool->setMaximumHeight(128);
+    // ui->labelMusicool->setMaximumWidth(256);
+    // ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    // QPixmap px(":/imgs/MusicoolCapa.png");
+    // //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // ui->labelMusicool->setPixmap(px);
+    // ui->labelMusicool->setScaledContents(true);
+    // ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
+    // ui->labelMusicool->setStyleSheet(
+    //     "#labelMusicool {"
+    //     "  border: 2px solid #3C3C40;"
+    //     "  border-radius: 16px;"
+    //     "  background-color: #1e1f22;"
+    //     "}"
+    //     );
 
     ui->lineEdit_metronome->setObjectName("lineEdit_metronome");
     ui->lineEdit_metronome->setStyleSheet(
@@ -265,33 +279,43 @@ MainWindow::MainWindow(QWidget *parent)
 por músicos da CCB, por isso é um aplicativo sem
 custo e em constante evolução.</p>
 
-<p>Se você é músico mas não é da CCB, também é gratuito
+<p align='justify'>Se você é músico mas não é da CCB, também é gratuito
 para você. Apenas diga 1 vez em voz alta:<br>
 <b>'Deus seja louvado: Amém!'</b>.</p>
 
+<div align='center'>
+<img src='qrc:/imgs/MusicoolCapa.png' width='200'/>
+</div>
+
+<h2>Bag</h2>
+<p align='justify'>Nesse menu estarão conceitos musicais utilizados no GEM. Evoluções estão
+ previstas, mas não planejadas, portanto, podem surgir ferramentas novas ou inovadoras para
+utilizarmos em nossos estudos.</p>
+<p align='justify'>Use as setas acima para navegar pela Bag.</p>
 <h2>Tuner</h2>
-<p>O Tuner tem o propósito de afinar instrumentos de sopro.
+<p align='justify'>O Tuner tem o propósito de afinar instrumentos de sopro.
 Deve funcionar também com violino, viola e celo.
 Ao clicar em <b>Tuner</b>, o microfone precisará ser
 aberto pelo aplicativo para 'escutar' seu instrumento.
-Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
+Ao sair da aba Tuner, o microfone será desligado automaticamente pelo Android, ao
+notar que o microfone não está mais em uso.</p>
 
 <h2>Frequency</h2>
-<p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
+<p align='justify'>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
 É possível também usar bemol e sustenido, trocar de nota ou de oitava,
 através dos botões.<br>
 Play e Stop levam até 2 segundos para iniciar.</p>
 
 <h2>Metronome</h2>
-<p>O metrônomo tem seleção de compasso binário, ternário e quaternário.
+<p align='justify'>O metrônomo tem seleção de compasso binário, ternário e quaternário.
 O ajuste de BPM permite adicionar 1 unidade de tempo ou 10 unidades de tempo por vez.</p>
 
 <h2>Sobre o autor</h2>
-<p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
+<p align='justify'>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
 nenhum vínculo do app com a CCB.</p>
 <p>O aplicativo, atualização, segurança e mantenimento é de inteira
 responsabilidade do autor.</p>
-<br><br>
+<br>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
 )");
 
@@ -657,3 +681,59 @@ void MainWindow::onMicrophonePermissionChanged(const QPermission &perm)
         qDebug() << "[MicPerm] denied (callback)";
 }
 #endif
+
+void MainWindow::setupStackNavigation()
+{
+    // ← botão voltar
+    connect(ui->pushButton_stackBack, &QPushButton::clicked, this, [this]{
+        auto *sw = ui->stackWidget;
+        if (!sw || sw->count() == 0) return;
+        int i = sw->currentIndex();
+        // retrocede (com wrap para a última página)
+        i = (i <= 0) ? (sw->count() - 1) : (i - 1);
+        sw->setCurrentIndex(i);
+    });
+
+    // → botão avançar
+    connect(ui->pushButton_stackNext, &QPushButton::clicked, this, [this]{
+        auto *sw = ui->stackWidget;
+        if (!sw || sw->count() == 0) return;
+        int i = sw->currentIndex();
+        // avança (com wrap para a primeira página)
+        i = (i + 1) % sw->count();
+        sw->setCurrentIndex(i);
+    });
+
+    // Sempre que trocar de página, atualiza o lineEdit
+    connect(ui->stackWidget, &QStackedWidget::currentChanged,
+            this, [this](int){ updateStackTitle(); });
+}
+
+QString MainWindow::currentPageTitle() const
+{
+    const auto *sw = ui->stackWidget;
+    if (!sw) return {};
+
+    QWidget *w = sw->currentWidget();
+    if (!w) return {};
+
+    // 1) tente uma propriedade "title" (útil para nomear no código/Designer)
+    if (w->property("title").isValid())
+        return w->property("title").toString();
+
+    // 2) tente windowTitle (pode ser definido no Designer)
+    if (!w->windowTitle().isEmpty())
+        return w->windowTitle();
+
+    // 3) fallback: objectName
+    return w->objectName();
+}
+
+void MainWindow::updateStackTitle() const
+{
+    const QString t = const_cast<MainWindow*>(this)->currentPageTitle();
+    // se quiser o lineEdit somente leitura:
+    // ui->LineEdit_titles->setReadOnly(true);
+    ui->lineEdit_titles->setText(t);
+}
+

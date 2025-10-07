@@ -47,7 +47,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
          </font>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <property name="tabSpacing">
          <number>6</number>
@@ -62,11 +62,14 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
           </rect>
          </property>
          <attribute name="label">
-          <string>About</string>
+          <string>Bag</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
            <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <property name="spacing">
@@ -76,75 +79,128 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
               </property>
               <item>
-               <widget class="QLabel" name="labelMusicool">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
                 </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>10</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>28</pointsize>
-                  <italic>true</italic>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-               </widget>
+                <item>
+                 <widget class="QPushButton" name="pushButton_stackBack">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>&lt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="lineEdit_titles">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>20</pointsize>
+                   </font>
+                  </property>
+                  <property name="inputMethodHints">
+                   <set>Qt::InputMethodHint::ImhNone</set>
+                  </property>
+                  <property name="text">
+                   <string>About</string>
+                  </property>
+                  <property name="maxLength">
+                   <number>40</number>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_stackNext">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QFrame" name="frame_about">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+               <widget class="QStackedWidget" name="stackWidget">
+                <property name="currentIndex">
+                 <number>0</number>
                 </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>200</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::Shape::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Shadow::Raised</enum>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_8">
-                 <item row="1" column="0">
-                  <widget class="QTextBrowser" name="textBrowser">
-                   <property name="verticalScrollBarPolicy">
-                    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
-                   </property>
-                   <property name="textInteractionFlags">
-                    <set>Qt::TextInteractionFlag::NoTextInteraction</set>
-                   </property>
-                   <property name="openLinks">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <widget class="QWidget" name="about">
+                 <layout class="QGridLayout" name="gridLayout_7">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_3">
+                    <item>
+                     <widget class="QFrame" name="frame_about">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>200</height>
+                       </size>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::Shape::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Shadow::Raised</enum>
+                      </property>
+                      <layout class="QGridLayout" name="gridLayout_8">
+                       <item row="1" column="0">
+                        <widget class="QTextBrowser" name="textBrowser">
+                         <property name="verticalScrollBarPolicy">
+                          <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+                         </property>
+                         <property name="textInteractionFlags">
+                          <set>Qt::TextInteractionFlag::NoTextInteraction</set>
+                         </property>
+                         <property name="openLinks">
+                          <bool>false</bool>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="claves"/>
                </widget>
               </item>
              </layout>
