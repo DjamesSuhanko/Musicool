@@ -161,13 +161,47 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
+                              QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)
+                              QColor("#B0B0B0"),  // ticks
+                              QColor("#A8FF00"),  // knob
+                              QColor("#E0E0E0")); // labels
+
+
+    ui->beatSlider->setStyleSheet(
+        "QSlider{ background: transparent; }"
+        "QSlider::groove:horizontal{"
+        "  background:#0B3D0B; height:8px; border-radius:4px;"
+        "}"
+        "QSlider::sub-page:horizontal{"
+        "  background:#0B3D0B; border-radius:4px;"
+        "}"
+        "QSlider::add-page:horizontal{"
+        "  background:transparent;"
+        "}"
+        "QSlider::handle:horizontal{"
+        "  background:#A8FF00; width:24px; height:24px;"
+        "  margin:-8px 0; border-radius:12px;"
+        "}"
+        );
+
+    // ficar “baixinho”
+    ui->beatSlider->setCompactPresetSmall();
+    // ou ajuste fino:
+    ui->beatSlider->setTrackThickness(6);
+    ui->beatSlider->setHandleRadius(12);
+    ui->beatSlider->setVerticalPadding(4);
+
+    // sem labels, se quiser ainda mais compacto visualmente
+    // ui->beatSlider->setShowLabels(false);
+
     //-- forçar cor clara dos textos - START -----
     qApp->setStyleSheet(R"(
   QWidget { background: #121212; }
   * { color: #EEEEEE; } /* texto claro por padrão */
   QLineEdit, QTextEdit, QTextBrowser, QPlainTextEdit {
     background: #1A1B1E;
-    selection-background-color: #4F8AFF;
+    selection-background-color: #0B3D0B;
     selection-color: #FFFFFF;
   }
   QToolTip { color: #121212; background: #EEEEEE; })");
@@ -277,26 +311,25 @@ responsabilidade do autor.</p>
         lay2->addWidget(metro);
     }
 
-    m_group = new QButtonGroup(this);
-    b_group = new QButtonGroup(this);
+    //metro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+    //ui->frameMetro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 
-    m_group->addButton(ui->pushButton_2);
-    m_group->addButton(ui->pushButton_3);
-    m_group->addButton(ui->pushButton_4);
+    ui->beatSlider->setDiscreteValues({2,3,4});   // já é o padrão
+    ui->beatSlider->setValue(4);                  // começa em 4/4
+    ui->beatSlider->setShowLabels(true);          // mostra “2  3  4” abaixo
 
-    m_group->setId(ui->pushButton_2,2);
-    m_group->setId(ui->pushButton_3,3);
-    m_group->setId(ui->pushButton_4,4);
-    m_group->setExclusive(true);
+    // tema opcional (coincide com seu app)
+    ui->beatSlider->setColors(QColor("#2A2A2E"),  // trilho
+                              QColor("#0B3D0B"),  // ativo
+                              QColor("#B0B0B0"),  // ticks
+                              QColor("#A8FF00"),  // handle
+                              QColor("#E0E0E0")); // labels
 
-    ui->pushButton_2->setCheckable(true);
-    ui->pushButton_3->setCheckable(true);
-    ui->pushButton_4->setCheckable(true);
-    ui->pushButton_4->setChecked(true);
-
-    connect(m_group, &QButtonGroup::idClicked, this, [this](int beats){
+    connect(ui->beatSlider, &BeatSlider::valueChanged, this, [this](int beats){
         metro->setBeatsPerMeasure(beats);
     });
+
+    b_group = new QButtonGroup(this);
 
     b_group->addButton(ui->pushButton_less_one);
     b_group->addButton(ui->pushButton_less_10);

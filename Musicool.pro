@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     androidutils.cpp \
+    beatslider.cpp \
     main.cpp \
     mainwindow.cpp \
     metronomewidget.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
 
 HEADERS += \
     androidutils.h \
+    beatslider.h \
     mainwindow.h \
     metronomewidget.h \
     pitchtracker.h \
