@@ -164,6 +164,60 @@ MainWindow::MainWindow(QWidget *parent)
     setupStackNavigation();
     updateStackTitle();
 
+
+    //REF:CALCULATOR
+    //semibreve
+    ui->pushButton_calc_semibreve->setText("");
+    ui->pushButton_calc_semibreve->setIcon(QIcon(QStringLiteral(":/imgs/001.png")));
+    ui->pushButton_calc_semibreve->setIconSize(QSize(32, 32));
+    //pausa de semibreve
+    ui->pushButton_calc_pause_1->setText("");
+    ui->pushButton_calc_pause_1->setIcon(QIcon(QStringLiteral(":/imgs/002p.png")));
+    ui->pushButton_calc_pause_1->setIconSize(QSize(32, 32));
+
+    //minima
+    ui->pushButton_calc_minima->setText("");
+    ui->pushButton_calc_minima->setIcon(QIcon(QStringLiteral(":/imgs/002.png")));
+    ui->pushButton_calc_minima->setIconSize(QSize(32, 32));
+    //pausa de minima
+    ui->pushButton_calc_pause_2->setText("");
+    ui->pushButton_calc_pause_2->setIcon(QIcon(QStringLiteral(":/imgs/001p.png")));
+    ui->pushButton_calc_pause_2->setIconSize(QSize(32, 32));
+
+    //seminima
+    ui->pushButton_calc_seminima->setText("");
+    ui->pushButton_calc_seminima->setIcon(QIcon(QStringLiteral(":/imgs/003.png")));
+    ui->pushButton_calc_seminima->setIconSize(QSize(32, 32));
+    //pausa de seminima
+    ui->pushButton_calc_pause_4->setText("");
+    ui->pushButton_calc_pause_4->setIcon(QIcon(QStringLiteral(":/imgs/003p.png")));
+    ui->pushButton_calc_pause_4->setIconSize(QSize(32, 32));
+
+
+    //colcheia
+    ui->pushButton_calc_colcheia->setText("");
+    ui->pushButton_calc_colcheia->setIcon(QIcon(QStringLiteral(":/imgs/004.png")));
+    ui->pushButton_calc_colcheia->setIconSize(QSize(32, 32));
+    //pausa de colcheia
+    ui->pushButton_calc_pause_8->setText("");
+    ui->pushButton_calc_pause_8->setIcon(QIcon(QStringLiteral(":/imgs/004p.png")));
+    ui->pushButton_calc_pause_8->setIconSize(QSize(32, 32));
+
+    //semicolcheia
+    ui->pushButton_calc_semicolcheia->setText("");
+    ui->pushButton_calc_semicolcheia->setIcon(QIcon(QStringLiteral(":/imgs/005.png")));
+    ui->pushButton_calc_semicolcheia->setIconSize(QSize(32, 32));
+    //pausa de semicolcheia
+    ui->pushButton_calc_pause_16->setText("");
+    ui->pushButton_calc_pause_16->setIcon(QIcon(QStringLiteral(":/imgs/005p.png")));
+    ui->pushButton_calc_pause_16->setIconSize(QSize(32, 32));
+
+    //backspace
+    ui->pushButton_calc_backspace->setText("");
+    ui->pushButton_calc_backspace->setIcon(QIcon(QStringLiteral(":/imgs/arrowL.png")));
+    ui->pushButton_calc_backspace->setIconSize(QSize(16, 16));
+
+
     //REF:STACK
     ui->pushButton_stackBack->setText("");
     ui->pushButton_stackBack->setIcon(QIcon(":/imgs/arrowL.png"));
@@ -175,6 +229,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->stackWidget->widget(0)->setProperty("title", "About");
     ui->stackWidget->widget(1)->setProperty("title", "Claves");
     ui->stackWidget->widget(2)->setProperty("title", "Figuras Musicais");
+    ui->stackWidget->widget(2)->setProperty("title", "Calculadora");
 
     ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
                               QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)

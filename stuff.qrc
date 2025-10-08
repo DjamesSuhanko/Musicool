@@ -10,5 +10,15 @@
         <file>imgs/play.png</file>
         <file>imgs/stop.png</file>
         <file>imgs/endecagrama.png</file>
+        <file>imgs/001.png</file>
+        <file>imgs/002.png</file>
+        <file>imgs/003.png</file>
+        <file>imgs/004.png</file>
+        <file>imgs/005.png</file>
+        <file>imgs/001p.png</file>
+        <file>imgs/002p.png</file>
+        <file>imgs/003p.png</file>
+        <file>imgs/004p.png</file>
+        <file>imgs/005p.png</file>
     </qresource>
 </RCC>

@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     androidutils.cpp \
     beatslider.cpp \
+    compasscalculator.cpp \
     main.cpp \
     mainwindow.cpp \
     metronomewidget.cpp \
@@ -22,6 +23,7 @@ SOURCES += \
 HEADERS += \
     androidutils.h \
     beatslider.h \
+    compasscalculator.h \
     mainwindow.h \
     metronomewidget.h \
     pitchtracker.h \
@@ -59,5 +61,5 @@ RESOURCES += \
 
 # Só 64-bit (Play exige 64-bit)
 ANDROID_ABIS = arm64-v8a
-VERSION = 2.7.0           # vira versionName
-ANDROID_VERSION_CODE = 9  # inteiro crescente a cada release
+VERSION = 2.8.0           # vira versionName
+ANDROID_VERSION_CODE = 10  # inteiro crescente a cada release
