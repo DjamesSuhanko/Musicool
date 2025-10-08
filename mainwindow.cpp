@@ -174,6 +174,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->stackWidget->widget(0)->setProperty("title", "About");
     ui->stackWidget->widget(1)->setProperty("title", "Claves");
+    ui->stackWidget->widget(2)->setProperty("title", "Figuras Musicais");
 
     ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
                               QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)
@@ -317,6 +318,41 @@ nenhum vínculo do app com a CCB.</p>
 responsabilidade do autor.</p>
 <br>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
+)");
+
+    QScroller::grabGesture(ui->textBrowser_claves->viewport(), QScroller::TouchGesture);
+    ui->textBrowser_claves->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+    ui->textBrowser_claves->setStyleSheet(
+        "QScrollBar:vertical{width:16px;margin:0px;}"
+        "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
+        );
+    ui->textBrowser_claves->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->textBrowser_claves->setReadOnly(true);
+    ui->textBrowser_claves->setOpenExternalLinks(true);
+    ui->textBrowser_claves->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->textBrowser_claves->setHtml(R"(
+
+<h2>Endecagrama</h2>
+<div align='center'>
+<img src='qrc:/imgs/endecagrama.png' width='200'/>
+</div>
+<p align='justify'>Na ordem, vemos a clave <b>Sol</b>, <b>Dó</b> e <b>Fá</b>.</p>
+<p align='justify'>O <b>Dó</b> da região média é o Dó3, que em cifra é o C4. Esses
+são dois dos sistemas de numeração de oitavas, que divergem no ponto de contagem inicial
+(um sistema começa em 0, o outro em 1), mas atente-se a isso: O 'Dó central' tem 261.63Hz.
+ Esse número se refere à frequência de ondas emitidas pelo Dó central.</p>
+
+<p align='justify'>Alinhando o Dó3 das três claves, temos 11 linhas, que formam o
+<i>Endecagrama</i>.</p>
+<p align='justify'>A clave <b>Sol</b> é a clave dos agudos; a clave <b>Dó</b>, dos médios; e a
+ clave <b>Fá</b>, dos graves.</p>
+<p align='justify'>Cada clave marca sua respectiva nota de referência. Na clave <b>Sol</b>, a
+linha de sol é envolvida pelo círculo da clave. Na clave <b>Dó</b>, o Dó está na linha central,
+bem no centro da lira. Na clave de <b>Fá</b>, a linha de Fá está entre os dois pontos. Repare que
+na clave de <b>Fá</b> à esquerda, a bolinha da curva também está sobre o Fá. O 'Dó comum' das
+claves está dentro do pentagrama, bastando usar a nota de referência para encontrar a posição de Dó.
 )");
 
     // ===== REF:METRONOME =====

@@ -166,13 +166,14 @@ void ToneGenerator::setVolume(float vol01)
 }
 
 // --------------------- helpers -------------------------------------
+//ATENÇÃO: -1 para em m_octave SOMENTE na notação 'nome da nota + oitava'. Se for cifra, apenas m_octave
 QString ToneGenerator::noteLabel() const
 {
     static const char* names[7] = {"DO","RE","MI","FA","SOL","LA","SI"};
     QString lab = names[m_noteIndex];
     if      (m_acc == Sharp) lab += "#";
     else if (m_acc == Flat)  lab += "b";
-    lab += QString::number(m_octave);
+    lab += QString::number(m_octave > 0 ? m_octave-1 : m_octave);
     return lab;
 }
 

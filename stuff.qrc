@@ -9,5 +9,6 @@
         <file>imgs/arrowU.png</file>
         <file>imgs/play.png</file>
         <file>imgs/stop.png</file>
+        <file>imgs/endecagrama.png</file>
     </qresource>
 </RCC>

@@ -88,7 +88,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
-                    <height>0</height>
+                    <height>58</height>
                    </size>
                   </property>
                   <property name="text">
@@ -140,7 +140,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
-                    <height>0</height>
+                    <height>58</height>
                    </size>
                   </property>
                   <property name="text">
@@ -155,7 +155,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 <property name="currentIndex">
                  <number>0</number>
                 </property>
-                <widget class="QWidget" name="about">
+                <widget class="QWidget" name="About">
                  <layout class="QGridLayout" name="gridLayout_7">
                   <item row="0" column="0">
                    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -200,7 +200,48 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   </item>
                  </layout>
                 </widget>
-                <widget class="QWidget" name="claves"/>
+                <widget class="QWidget" name="claves">
+                 <layout class="QGridLayout" name="gridLayout_18">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_4">
+                    <item>
+                     <widget class="QTextBrowser" name="textBrowser_claves">
+                      <property name="verticalScrollBarPolicy">
+                       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+                      </property>
+                      <property name="textInteractionFlags">
+                       <set>Qt::TextInteractionFlag::NoTextInteraction</set>
+                      </property>
+                      <property name="openLinks">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="FigurasMusicais">
+                 <layout class="QGridLayout" name="gridLayout_19">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_5">
+                    <item>
+                     <widget class="QTextBrowser" name="textBrowser_figuras">
+                      <property name="verticalScrollBarPolicy">
+                       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+                      </property>
+                      <property name="textInteractionFlags">
+                       <set>Qt::TextInteractionFlag::NoTextInteraction</set>
+                      </property>
+                      <property name="openLinks">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
               </item>
              </layout>
