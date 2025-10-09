@@ -20,5 +20,7 @@
         <file>imgs/003p.png</file>
         <file>imgs/004p.png</file>
         <file>imgs/005p.png</file>
+        <file>Fonts/NotoMusic-Regular.ttf</file>
     </qresource>
+    <qresource prefix="/Fonts"/>
 </RCC>

@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QButtonGroup>
 #include "staffnotewidget.h"
+#include "compasscalculator.h"
 
 #ifdef Q_OS_ANDROID
 #include <QPermission>
@@ -64,6 +65,7 @@ private:
 
     QButtonGroup *m_group    = nullptr; // measure
     QButtonGroup *b_group    = nullptr; // bpm
+    QButtonGroup *calc_group = nullptr; //calculadora
 
     void setupTunerInFrame();
     void startTunerWithPermission();

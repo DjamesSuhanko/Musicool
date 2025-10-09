@@ -13,9 +13,22 @@ CompassCalculator::CompassCalculator(QObject* parent)
 
 void CompassCalculator::setButtonGroup(QButtonGroup* group) {
     if (!group) return;
-    connect(group, SIGNAL(buttonClicked(int)), this, SLOT(handleButtonId(int)));
-    connect(group, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(handleButton(QAbstractButton*)));
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt 6
+    connect(group, &QButtonGroup::idClicked,
+            this,   &CompassCalculator::handleButtonId);
+    connect(group, &QButtonGroup::buttonClicked,
+            this,   &CompassCalculator::handleButton);
+#else
+    // Qt 5
+    connect(group, SIGNAL(buttonClicked(int)),
+            this,   SLOT(handleButtonId(int)));
+    connect(group, SIGNAL(buttonClicked(QAbstractButton*)),
+            this,   SLOT(handleButton(QAbstractButton*)));
+#endif
 }
+
 
 QString CompassCalculator::totalText() const {
     if (m_total.den == 1) return QString::number(m_total.num);

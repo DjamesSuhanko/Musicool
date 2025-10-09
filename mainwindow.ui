@@ -71,19 +71,16 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
              <number>0</number>
             </property>
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_10">
-              <property name="spacing">
-               <number>12</number>
-              </property>
+             <layout class="QGridLayout" name="gridLayout_24">
               <property name="sizeConstraint">
-               <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
+               <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
               </property>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout_25">
                 <property name="sizeConstraint">
                  <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
                 </property>
-                <item>
+                <item row="0" column="0">
                  <widget class="QPushButton" name="pushButton_stackBack">
                   <property name="minimumSize">
                    <size>
@@ -96,7 +93,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   </property>
                  </widget>
                 </item>
-                <item>
+                <item row="0" column="1">
                  <widget class="QLineEdit" name="lineEdit_titles">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -133,10 +130,19 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
-                <item>
+                <item row="0" column="2">
                  <widget class="QPushButton" name="pushButton_stackNext">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -150,8 +156,14 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                 </item>
                </layout>
               </item>
-              <item>
+              <item row="1" column="0">
                <widget class="QStackedWidget" name="stackWidget">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="currentIndex">
                  <number>3</number>
                 </property>
@@ -160,40 +172,22 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                   <item row="0" column="0">
                    <layout class="QVBoxLayout" name="verticalLayout_3">
                     <item>
-                     <widget class="QFrame" name="frame_about">
+                     <widget class="QTextBrowser" name="textBrowser">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>200</height>
-                       </size>
+                      <property name="verticalScrollBarPolicy">
+                       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
                       </property>
-                      <property name="frameShape">
-                       <enum>QFrame::Shape::StyledPanel</enum>
+                      <property name="textInteractionFlags">
+                       <set>Qt::TextInteractionFlag::NoTextInteraction</set>
                       </property>
-                      <property name="frameShadow">
-                       <enum>QFrame::Shadow::Raised</enum>
+                      <property name="openLinks">
+                       <bool>false</bool>
                       </property>
-                      <layout class="QGridLayout" name="gridLayout_8">
-                       <item row="1" column="0">
-                        <widget class="QTextBrowser" name="textBrowser">
-                         <property name="verticalScrollBarPolicy">
-                          <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
-                         </property>
-                         <property name="textInteractionFlags">
-                          <set>Qt::TextInteractionFlag::NoTextInteraction</set>
-                         </property>
-                         <property name="openLinks">
-                          <bool>false</bool>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
                      </widget>
                     </item>
                    </layout>
@@ -250,59 +244,87 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                      <number>12</number>
                     </property>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_mantissa">
+                     <widget class="QFrame" name="frame">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>0</height>
-                       </size>
+                      <property name="frameShape">
+                       <enum>QFrame::Shape::StyledPanel</enum>
                       </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>16777215</height>
-                       </size>
+                      <property name="frameShadow">
+                       <enum>QFrame::Shadow::Raised</enum>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>20</pointsize>
-                       </font>
-                      </property>
-                      <property name="inputMethodHints">
-                       <set>Qt::InputMethodHint::ImhNone</set>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="maxLength">
-                       <number>40</number>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
+                      <layout class="QGridLayout" name="gridLayout_23">
+                       <item row="1" column="0">
+                        <layout class="QVBoxLayout" name="verticalLayout_7">
+                         <property name="sizeConstraint">
+                          <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+                         </property>
+                         <item>
+                          <widget class="QLabel" name="labelSignaturePlain">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>22</pointsize>
+                             <bold>true</bold>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>(compass)</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="0" column="0">
+                        <widget class="QLineEdit" name="lineEdit_calc_notes">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>0</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>16777215</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>20</pointsize>
+                          </font>
+                         </property>
+                         <property name="inputMethodHints">
+                          <set>Qt::InputMethodHint::ImhNone</set>
+                         </property>
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="maxLength">
+                          <number>40</number>
+                         </property>
+                         <property name="alignment">
+                          <set>Qt::AlignmentFlag::AlignCenter</set>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
                      </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer_2">
-                      <property name="orientation">
-                       <enum>Qt::Orientation::Vertical</enum>
-                      </property>
-                      <property name="sizeType">
-                       <enum>QSizePolicy::Policy::Minimum</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
                     </item>
                     <item>
                      <layout class="QGridLayout" name="gridLayout_21">
@@ -318,8 +340,21 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                       <property name="horizontalSpacing">
                        <number>12</number>
                       </property>
-                      <item row="2" column="2">
-                       <widget class="QPushButton" name="pushButton_cal_dot">
+                      <item row="3" column="3">
+                       <widget class="QPushButton" name="pushButton_calc_free1">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="0">
+                       <widget class="QPushButton" name="pushButton_calc_pause_2">
                         <property name="minimumSize">
                          <size>
                           <width>0</width>
@@ -332,7 +367,43 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                          </font>
                         </property>
                         <property name="text">
-                         <string>.</string>
+                         <string>𝄼</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="6" column="1">
+                       <widget class="QPushButton" name="pushButton_calc_semicolcheia">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>𝅘𝅥𝅯</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="0">
+                       <widget class="QPushButton" name="pushButton_calc_pause_1">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>𝄻</string>
                         </property>
                        </widget>
                       </item>
@@ -367,73 +438,6 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                         </property>
                        </widget>
                       </item>
-                      <item row="2" column="1">
-                       <widget class="QPushButton" name="pushButton_calc_semibreve">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝅝</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="5" column="1">
-                       <widget class="QPushButton" name="pushButton_calc_colcheia">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>♪</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="6" column="1">
-                       <widget class="QPushButton" name="pushButton_calc_semicolcheia">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝅘𝅥𝅯</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="3" column="3">
-                       <widget class="QPushButton" name="pushButton_calc_free1">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
-                      </item>
                       <item row="4" column="1">
                        <widget class="QPushButton" name="pushButton_calc_seminima">
                         <property name="minimumSize">
@@ -449,96 +453,6 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                         </property>
                         <property name="text">
                          <string>♩</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="3" column="0">
-                       <widget class="QPushButton" name="pushButton_calc_pause_2">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝄼</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="6" column="0">
-                       <widget class="QPushButton" name="pushButton_calc_pause_16">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝄿</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="2" column="0">
-                       <widget class="QPushButton" name="pushButton_calc_pause_1">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝄻</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="4" column="0">
-                       <widget class="QPushButton" name="pushButton_calc_pause_4">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>24</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>𝄽</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="3" column="2">
-                       <widget class="QPushButton" name="pushButton_calc_backspace">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>58</height>
-                         </size>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>16</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>⌫</string>
                         </property>
                        </widget>
                       </item>
@@ -560,6 +474,24 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                         </property>
                        </widget>
                       </item>
+                      <item row="4" column="0">
+                       <widget class="QPushButton" name="pushButton_calc_pause_4">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>𝄽</string>
+                        </property>
+                       </widget>
+                      </item>
                       <item row="4" column="2">
                        <widget class="QPushButton" name="pushButton_calc_clear">
                         <property name="minimumSize">
@@ -575,6 +507,96 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                         </property>
                         <property name="text">
                          <string>CLS</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="5" column="1">
+                       <widget class="QPushButton" name="pushButton_calc_colcheia">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>♪</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="6" column="0">
+                       <widget class="QPushButton" name="pushButton_calc_pause_16">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>𝄿</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="2">
+                       <widget class="QPushButton" name="pushButton_cal_dot">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="2">
+                       <widget class="QPushButton" name="pushButton_calc_backspace">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>16</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>⌫</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="1">
+                       <widget class="QPushButton" name="pushButton_calc_semibreve">
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>58</height>
+                         </size>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>24</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>𝅝</string>
                         </property>
                        </widget>
                       </item>

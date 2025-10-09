@@ -17,6 +17,7 @@
 #include <QProxyStyle>
 #include <QScroller>
 #include <theme.h>
+#include <QFontDatabase>
 
 #ifdef Q_OS_ANDROID
 #include <QtCore/qjniobject.h>
@@ -161,6 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+
     setupStackNavigation();
     updateStackTitle();
 
@@ -217,6 +219,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_calc_backspace->setIcon(QIcon(QStringLiteral(":/imgs/arrowL.png")));
     ui->pushButton_calc_backspace->setIconSize(QSize(16, 16));
 
+    calc_group = new QButtonGroup(this);
+
+    calc_group->addButton(ui->pushButton_calc_semibreve,      CompassCalculator::BTN_NOTE_SEMIBREVE);
+    calc_group->addButton(ui->pushButton_calc_minima,         CompassCalculator::BTN_NOTE_MINIMA);
+    calc_group->addButton(ui->pushButton_calc_seminima,       CompassCalculator::BTN_NOTE_SEMINIMA);
+    calc_group->addButton(ui->pushButton_calc_colcheia,       CompassCalculator::BTN_NOTE_COLCHEIA);
+    calc_group->addButton(ui->pushButton_calc_semicolcheia,   CompassCalculator::BTN_NOTE_SEMICOLCHEIA);
+
+    calc_group->addButton(ui->pushButton_calc_pause_1,       CompassCalculator::BTN_REST_SEMIBREVE);
+    calc_group->addButton(ui->pushButton_calc_pause_2,       CompassCalculator::BTN_REST_MINIMA);
+    calc_group->addButton(ui->pushButton_calc_pause_4,       CompassCalculator::BTN_REST_SEMINIMA);
+    calc_group->addButton(ui->pushButton_calc_pause_8,       CompassCalculator::BTN_REST_COLCHEIA);
+    calc_group->addButton(ui->pushButton_calc_pause_16,      CompassCalculator::BTN_REST_SEMICOLCHEIA);
+
+    calc_group->addButton(ui->pushButton_cal_dot,            CompassCalculator::BTN_DOT);
+    calc_group->addButton(ui->pushButton_calc_backspace,     CompassCalculator::BTN_BACKSPACE);
+    calc_group->addButton(ui->pushButton_calc_clear,         CompassCalculator::BTN_CLEAR);
 
     //REF:STACK
     ui->pushButton_stackBack->setText("");
@@ -226,10 +245,54 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_stackNext->setIcon(QIcon(":/imgs/arrowR.png"));
     ui->pushButton_stackNext->setIconSize(QSize(16, 16));
 
+    //WARNING ALERT TODO: sempre deixar a mainwindow.ui na aba da calculadora. Ao iniciar o app, a troca é automática para About
+    //e isso resolve o problema de diagramação da janela
     ui->stackWidget->widget(0)->setProperty("title", "About");
     ui->stackWidget->widget(1)->setProperty("title", "Claves");
     ui->stackWidget->widget(2)->setProperty("title", "Figuras Musicais");
-    ui->stackWidget->widget(2)->setProperty("title", "Calculadora");
+    ui->stackWidget->widget(3)->setProperty("title", "Calculadora");
+
+    auto *calc = new CompassCalculator(this);
+    calc->setButtonGroup(calc_group);
+
+    // no ctor:
+    int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
+    // ou ":/fonts/BravuraText.ttf"
+    QString family = QFontDatabase::applicationFontFamilies(id).value(0);
+    QFont music(family);
+    music.setPointSizeF(ui->lineEdit_calc_notes->font().pointSizeF() * 1.2); // opcional
+
+    ui->lineEdit_calc_notes->setFont(music);
+    //ui->labelSeq->setTextFormat(Qt::RichText);
+
+    // connect(calc, &CompassCalculator::totalChanged, this,
+    //         [this](const Frac& , const QString& txt){
+    //             ui->labelTopCalc->setText(txt); // fração da semibreve
+    //         });
+
+    ui->lineEdit_calc_notes->setReadOnly(true);
+    ui->lineEdit_calc_notes->setFrame(false);
+    ui->lineEdit_calc_notes->setFocusPolicy(Qt::NoFocus);
+    ui->lineEdit_calc_notes->setCursor(Qt::ArrowCursor);
+    ui->lineEdit_calc_notes->setTextMargins(4, 0, 4, 0);  // um respiro
+    ui->lineEdit_calc_notes->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    // NÃO deixe crescer verticalmente
+    //ui->lineEdit_calc_notes->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    //ui->lineEdit_calc_notes->setFixedHeight(ui->lineEdit_notes->sizeHint().height());
+
+    connect(calc, &CompassCalculator::sequenceChanged, this,
+            [this](const QString& seq){
+                ui->lineEdit_calc_notes->setText(seq);   // "♩ + ♪ + . + 𝄽"
+            });
+
+    connect(calc, &CompassCalculator::signatureChanged, this,
+            [this](int N, int D, const QString& textND, const QString& html){
+                ui->labelSignaturePlain->setText(textND); // "3/4"
+                //ui->labelSignatureStacked->setText(html); // empilhado
+                //ui->labelSignatureStacked->setTextFormat(Qt::RichText);
+            });
+
 
     ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
                               QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)
@@ -328,7 +391,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->textBrowser->setReadOnly(true);
     ui->textBrowser->setOpenExternalLinks(true);
-    ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->textBrowser->setTextInteractionFlags(Qt::NoTextInteraction);
     ui->textBrowser->setHtml(R"(
 <h2>Sobre o Musicool</h2>
 <p align='justify'>Esse aplicativo foi desenvolvido para ser usado
@@ -386,7 +449,7 @@ responsabilidade do autor.</p>
     ui->textBrowser_claves->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->textBrowser_claves->setReadOnly(true);
     ui->textBrowser_claves->setOpenExternalLinks(true);
-    ui->textBrowser_claves->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->textBrowser_claves->setTextInteractionFlags(Qt::NoTextInteraction);
     ui->textBrowser_claves->setHtml(R"(
 
 <h2>Endecagrama</h2>
@@ -409,6 +472,104 @@ bem no centro da lira. Na clave de <b>Fá</b>, a linha de Fá está entre os doi
 na clave de <b>Fá</b> à esquerda, a bolinha da curva também está sobre o Fá. O 'Dó comum' das
 claves está dentro do pentagrama, bastando usar a nota de referência para encontrar a posição de Dó.
 )");
+
+
+    const QString html = R"(
+<div align="center">
+<table border="1" cellpadding="6" cellspacing="0" width="100%">
+  <tr bgcolor="#f5f5f5" align="center">
+    <th><font color="#000000">FIGURA</font></th>
+    <th><font color="#000000">NOME</font></th>
+    <th><font color="#000000">PAUSA</font></th>
+    <th><font color="#000000">VALOR</font></th>
+    <th><font color="#000000">TEMPO</font></th>
+  </tr>
+
+  <!-- Semibreve -->
+  <tr align="center">
+    <td><img src=":/imgs/001.png" alt="Semibreve" width="32" height="32"></td>
+    <td align="left">Semibreve</td>
+    <td><img src=":/imgs/002p.png" alt="Pausa de semibreve" width="32" height="32"></td>
+    <td>1</td>
+    <td>4</td>
+  </tr>
+
+  <!-- Mínima -->
+  <tr align="center">
+    <td><img src=":/imgs/002.png" alt="Mínima" width="32" height="32"></td>
+    <td align="left">Mínima</td>
+    <td><img src=":/imgs/001p.png" alt="Pausa de mínima" width="32" height="32"></td>
+    <td>2</td>
+    <td>2</td>
+  </tr>
+
+  <!-- Semínima -->
+  <tr align="center">
+    <td><img src=":/imgs/003.png" alt="Semínima" width="32" height="32"></td>
+    <td align="left">Semínima</td>
+    <td><img src=":/imgs/003p.png" alt="Pausa de semínima" width="32" height="32"></td>
+    <td>4</td>
+    <td>1</td>
+  </tr>
+
+  <!-- Colcheia -->
+  <tr align="center">
+    <td><img src=":/imgs/004.png" alt="Colcheia" width="32" height="32"></td>
+    <td align="left">Colcheia</td>
+    <td><img src=":/imgs/004p.png" alt="Pausa de colcheia" width="32" height="32"></td>
+    <td>8</td>
+    <td>1/2</td>
+  </tr>
+
+  <!-- Semicolcheia -->
+  <tr align="center">
+    <td><img src=":/imgs/005.png" alt="Semicolcheia" width="32" height="32"></td>
+    <td align="left">Semicolcheia</td>
+    <td><img src=":/imgs/005p.png" alt="Pausa de semicolcheia" width="32" height="32"></td>
+    <td>16</td>
+    <td>1/4</td>
+  </tr>
+</table>
+</div>
+
+<p align='justify'>O valor de referência é a proporção de notas que cabe na Semibreve. É fácil
+guardar os valores com essa fórmula básica:</p>
+<b>(n=0; n+1); VALOR = 2<sup>n</sup></b>
+<p align='justify'>Isto é:</p><br>
+2 elevado a 0 = 1;<br>
+2 elevado a 1 = 2;<br>
+2 elevador a 2 = 4;<br>
+e assim por diante.
+<p align='justify'>Já o tempo é justamente o tempo da nota. Não estão incluídas fusa e semifusa
+ nessa tabela porque não usamos em nosso hinário.</p>
+
+<p align='justify'>Outra coisa interessante é que o tempo médio dos hinos é 60BPM (Batidas Por Minuto).
+ Hinos com ~120BPM indicam Minima como a nota de 1 tempo, enquanto hinos com ~60BPM indicam a Seminima.<p>
+
+<p align='justify'>Lembre-se: Não é uma regra, mas esse andamento é considerado por causa do canto em
+harmonia.</p>
+
+<p align='justify'>No próximo item da Bag você encontrará uma calculadora de compasso, que auxiliará a
+validar os exercícios de compasso. Mas use para validar, ou quando não tiver certeza, senão você não
+aprenderá.</p>
+
+<p align='justify'></p>
+
+)";
+
+
+    QScroller::grabGesture(ui->textBrowser_figuras->viewport(), QScroller::TouchGesture);
+    ui->textBrowser_figuras->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+    ui->textBrowser_figuras->setStyleSheet(
+        "QScrollBar:vertical{width:16px;margin:0px;}"
+        "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
+        );
+    ui->textBrowser_figuras->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->textBrowser_figuras->setReadOnly(true);
+    ui->textBrowser_figuras->setTextInteractionFlags(Qt::NoTextInteraction);
+    ui->textBrowser_figuras->setHtml(html);
 
     // ===== REF:METRONOME =====
     ui->lineEdit_metronome->setReadOnly(true);
@@ -578,7 +739,10 @@ claves está dentro do pentagrama, bastando usar a nota de referência para enco
     this->setupStaffInFrame();
 
     // ===== DEFAULT TAB =====
+    ui->stackWidget->setCurrentIndex(2);
     ui->toolBox->setCurrentIndex(PAGEINFO);
+    ui->stackWidget->setCurrentIndex(1);
+    ui->stackWidget->setCurrentIndex(0);
 
     // ======= REF:STAFF TUNER =========
     setupStaffInTuner();
