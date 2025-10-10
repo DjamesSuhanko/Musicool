@@ -19,7 +19,7 @@ public:
 
     // Controle principal
     Q_INVOKABLE void start();           // começa a tocar a nota atual
-    Q_INVOKABLE void stop();            // para de tocar
+    Q_INVOKABLE void stop();            // parar de tocar
     Q_INVOKABLE bool isPlaying() const { return m_playing; }
 
     // Nota base (0..6) => C, D, E, F, G, A, B

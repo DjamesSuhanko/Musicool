@@ -10,9 +10,8 @@
 #include <QPermission>
 #include <QTimer>
 #include <QButtonGroup>
-
-//TODO: teste
 #include "staffnotewidget.h"
+#include "compasscalculator.h"
 
 #ifdef Q_OS_ANDROID
 #include <QPermission>
@@ -52,7 +51,7 @@ private slots:
     void onMicrophonePermissionChanged(const QPermission &perm);
     void setBPMvalue(QAbstractButton* button);
     void emitNote(); //conectar com os botoes de nota; identificar o botão e somar/subtrair, considerando >0 e <7
-    void emitOctave(); // TODO: tratar N oitavas
+    void emitOctave();
 
 private:
     Ui::MainWindow *ui;
@@ -66,6 +65,7 @@ private:
 
     QButtonGroup *m_group    = nullptr; // measure
     QButtonGroup *b_group    = nullptr; // bpm
+    QButtonGroup *calc_group = nullptr; //calculadora
 
     void setupTunerInFrame();
     void startTunerWithPermission();
@@ -75,6 +75,10 @@ private:
     void reloadInsetsNow();
     void setupStaffInTuner();
     void onToolBoxIndexChanged(int idx);
+
+    void setupStackNavigation();      // conecta botões e sinal do stack
+    void updateStackTitle() const;    // joga o título atual no lineEdit
+    QString currentPageTitle() const; // busca título da página atual
 
     int noteIdxValue = 0;
     int octaveValue  = 4;

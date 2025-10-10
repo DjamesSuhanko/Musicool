@@ -17,6 +17,7 @@
 #include <QProxyStyle>
 #include <QScroller>
 #include <theme.h>
+#include <QFontDatabase>
 
 #ifdef Q_OS_ANDROID
 #include <QtCore/qjniobject.h>
@@ -161,13 +162,184 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->toolBox->setItemText(0, QString::fromUtf8(u8"\U0001D15F") + " Bag");
+    ui->toolBox->setItemText(1, QString::fromUtf8(u8"\U0001D15E") + " Tuner");
+    ui->toolBox->setItemText(2, QString::fromUtf8(u8"\U0001D15E") + QString::fromUtf8(u8"\U0001D15F") + " Frequency");
+    ui->toolBox->setItemText(3, QString::fromUtf8(u8"\U0001D15D") + " Metronome");
+
+
+    setupStackNavigation();
+    updateStackTitle();
+
+
+    //REF:CALCULATOR
+    //semibreve
+    ui->pushButton_calc_semibreve->setText("");
+    ui->pushButton_calc_semibreve->setIcon(QIcon(QStringLiteral(":/imgs/001.png")));
+    ui->pushButton_calc_semibreve->setIconSize(QSize(32, 32));
+    //pausa de semibreve
+    ui->pushButton_calc_pause_1->setText("");
+    ui->pushButton_calc_pause_1->setIcon(QIcon(QStringLiteral(":/imgs/002p.png")));
+    ui->pushButton_calc_pause_1->setIconSize(QSize(32, 32));
+
+    //minima
+    ui->pushButton_calc_minima->setText("");
+    ui->pushButton_calc_minima->setIcon(QIcon(QStringLiteral(":/imgs/002.png")));
+    ui->pushButton_calc_minima->setIconSize(QSize(32, 32));
+    //pausa de minima
+    ui->pushButton_calc_pause_2->setText("");
+    ui->pushButton_calc_pause_2->setIcon(QIcon(QStringLiteral(":/imgs/001p.png")));
+    ui->pushButton_calc_pause_2->setIconSize(QSize(32, 32));
+
+    //seminima
+    ui->pushButton_calc_seminima->setText("");
+    ui->pushButton_calc_seminima->setIcon(QIcon(QStringLiteral(":/imgs/003.png")));
+    ui->pushButton_calc_seminima->setIconSize(QSize(32, 32));
+    //pausa de seminima
+    ui->pushButton_calc_pause_4->setText("");
+    ui->pushButton_calc_pause_4->setIcon(QIcon(QStringLiteral(":/imgs/003p.png")));
+    ui->pushButton_calc_pause_4->setIconSize(QSize(32, 32));
+
+
+    //colcheia
+    ui->pushButton_calc_colcheia->setText("");
+    ui->pushButton_calc_colcheia->setIcon(QIcon(QStringLiteral(":/imgs/004.png")));
+    ui->pushButton_calc_colcheia->setIconSize(QSize(32, 32));
+    //pausa de colcheia
+    ui->pushButton_calc_pause_8->setText("");
+    ui->pushButton_calc_pause_8->setIcon(QIcon(QStringLiteral(":/imgs/004p.png")));
+    ui->pushButton_calc_pause_8->setIconSize(QSize(32, 32));
+
+    //semicolcheia
+    ui->pushButton_calc_semicolcheia->setText("");
+    ui->pushButton_calc_semicolcheia->setIcon(QIcon(QStringLiteral(":/imgs/005.png")));
+    ui->pushButton_calc_semicolcheia->setIconSize(QSize(32, 32));
+    //pausa de semicolcheia
+    ui->pushButton_calc_pause_16->setText("");
+    ui->pushButton_calc_pause_16->setIcon(QIcon(QStringLiteral(":/imgs/005p.png")));
+    ui->pushButton_calc_pause_16->setIconSize(QSize(32, 32));
+
+    //backspace
+    ui->pushButton_calc_backspace->setText("");
+    ui->pushButton_calc_backspace->setIcon(QIcon(QStringLiteral(":/imgs/arrowL.png")));
+    ui->pushButton_calc_backspace->setIconSize(QSize(16, 16));
+
+    calc_group = new QButtonGroup(this);
+
+    calc_group->addButton(ui->pushButton_calc_semibreve,      CompassCalculator::BTN_NOTE_SEMIBREVE);
+    calc_group->addButton(ui->pushButton_calc_minima,         CompassCalculator::BTN_NOTE_MINIMA);
+    calc_group->addButton(ui->pushButton_calc_seminima,       CompassCalculator::BTN_NOTE_SEMINIMA);
+    calc_group->addButton(ui->pushButton_calc_colcheia,       CompassCalculator::BTN_NOTE_COLCHEIA);
+    calc_group->addButton(ui->pushButton_calc_semicolcheia,   CompassCalculator::BTN_NOTE_SEMICOLCHEIA);
+
+    calc_group->addButton(ui->pushButton_calc_pause_1,       CompassCalculator::BTN_REST_SEMIBREVE);
+    calc_group->addButton(ui->pushButton_calc_pause_2,       CompassCalculator::BTN_REST_MINIMA);
+    calc_group->addButton(ui->pushButton_calc_pause_4,       CompassCalculator::BTN_REST_SEMINIMA);
+    calc_group->addButton(ui->pushButton_calc_pause_8,       CompassCalculator::BTN_REST_COLCHEIA);
+    calc_group->addButton(ui->pushButton_calc_pause_16,      CompassCalculator::BTN_REST_SEMICOLCHEIA);
+
+    calc_group->addButton(ui->pushButton_cal_dot,            CompassCalculator::BTN_DOT);
+    calc_group->addButton(ui->pushButton_calc_backspace,     CompassCalculator::BTN_BACKSPACE);
+    calc_group->addButton(ui->pushButton_calc_clear,         CompassCalculator::BTN_CLEAR);
+
+    //REF:STACK
+    ui->pushButton_stackBack->setText("");
+    ui->pushButton_stackBack->setIcon(QIcon(":/imgs/arrowL.png"));
+    ui->pushButton_stackBack->setIconSize(QSize(16, 16));
+    ui->pushButton_stackNext->setText("");
+    ui->pushButton_stackNext->setIcon(QIcon(":/imgs/arrowR.png"));
+    ui->pushButton_stackNext->setIconSize(QSize(16, 16));
+
+    //WARNING ALERT TODO: sempre deixar a mainwindow.ui na aba da calculadora. Ao iniciar o app, a troca é automática para About
+    //e isso resolve o problema de diagramação da janela
+    ui->stackWidget->widget(0)->setProperty("title", "About");
+    ui->stackWidget->widget(1)->setProperty("title", "Claves");
+    ui->stackWidget->widget(2)->setProperty("title", "Figuras Musicais");
+    ui->stackWidget->widget(3)->setProperty("title", "Calculadora");
+
+    auto *calc = new CompassCalculator(this);
+    calc->setButtonGroup(calc_group);
+
+    // no ctor:
+    int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
+    // ou ":/fonts/BravuraText.ttf"
+    QString family = QFontDatabase::applicationFontFamilies(id).value(0);
+    QFont music(family);
+    music.setPointSizeF(ui->lineEdit_calc_notes->font().pointSizeF() * 1.2); // opcional
+
+    ui->lineEdit_calc_notes->setFont(music);
+    //ui->labelSeq->setTextFormat(Qt::RichText);
+
+    // connect(calc, &CompassCalculator::totalChanged, this,
+    //         [this](const Frac& , const QString& txt){
+    //             ui->labelTopCalc->setText(txt); // fração da semibreve
+    //         });
+
+    ui->lineEdit_calc_notes->setReadOnly(true);
+    ui->lineEdit_calc_notes->setFrame(false);
+    ui->lineEdit_calc_notes->setFocusPolicy(Qt::NoFocus);
+    ui->lineEdit_calc_notes->setCursor(Qt::ArrowCursor);
+    ui->lineEdit_calc_notes->setTextMargins(4, 0, 4, 0);  // um respiro
+    ui->lineEdit_calc_notes->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    // NÃO deixe crescer verticalmente
+    //ui->lineEdit_calc_notes->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    //ui->lineEdit_calc_notes->setFixedHeight(ui->lineEdit_notes->sizeHint().height());
+
+    connect(calc, &CompassCalculator::sequenceChanged, this,
+            [this](const QString& seq){
+                ui->lineEdit_calc_notes->setText(seq);   // "♩ + ♪ + . + 𝄽"
+            });
+
+    connect(calc, &CompassCalculator::signatureChanged, this,
+            [this](int N, int D, const QString& textND, const QString& html){
+                ui->labelSignaturePlain->setText(textND); // "3/4"
+                //ui->labelSignatureStacked->setText(html); // empilhado
+                //ui->labelSignatureStacked->setTextFormat(Qt::RichText);
+            });
+
+
+    ui->beatSlider->setColors(QColor("#0B3D0B"),  // trilho
+                              QColor("#0B3D0B"),  // ativo (mesma cor → nada de azul)
+                              QColor("#B0B0B0"),  // ticks
+                              QColor("#A8FF00"),  // knob
+                              QColor("#E0E0E0")); // labels
+
+
+    ui->beatSlider->setStyleSheet(
+        "QSlider{ background: transparent; }"
+        "QSlider::groove:horizontal{"
+        "  background:#0B3D0B; height:8px; border-radius:4px;"
+        "}"
+        "QSlider::sub-page:horizontal{"
+        "  background:#0B3D0B; border-radius:4px;"
+        "}"
+        "QSlider::add-page:horizontal{"
+        "  background:transparent;"
+        "}"
+        "QSlider::handle:horizontal{"
+        "  background:#A8FF00; width:24px; height:24px;"
+        "  margin:-8px 0; border-radius:12px;"
+        "}"
+        );
+
+    // ficar “baixinho”
+    ui->beatSlider->setCompactPresetSmall();
+    // ou ajuste fino:
+    ui->beatSlider->setTrackThickness(6);
+    ui->beatSlider->setHandleRadius(12);
+    ui->beatSlider->setVerticalPadding(4);
+
+    // sem labels, se quiser ainda mais compacto visualmente
+    // ui->beatSlider->setShowLabels(false);
+
     //-- forçar cor clara dos textos - START -----
     qApp->setStyleSheet(R"(
   QWidget { background: #121212; }
   * { color: #EEEEEE; } /* texto claro por padrão */
   QLineEdit, QTextEdit, QTextBrowser, QPlainTextEdit {
     background: #1A1B1E;
-    selection-background-color: #4F8AFF;
+    selection-background-color: #0B3D0B;
     selection-color: #FFFFFF;
   }
   QToolTip { color: #121212; background: #EEEEEE; })");
@@ -184,22 +356,22 @@ MainWindow::MainWindow(QWidget *parent)
     centralWidget()->setAttribute(Qt::WA_AcceptTouchEvents, true); // garante eventos de toque
 
 
-    ui->labelMusicool->setAlignment(Qt::AlignCenter);
-    ui->labelMusicool->setMaximumHeight(128);
-    ui->labelMusicool->setMaximumWidth(256);
-    ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    QPixmap px(":/imgs/MusicoolCapa.png");
-    //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    ui->labelMusicool->setPixmap(px);
-    ui->labelMusicool->setScaledContents(true);
-    ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
-    ui->labelMusicool->setStyleSheet(
-        "#labelMusicool {"
-        "  border: 2px solid #3C3C40;"
-        "  border-radius: 16px;"
-        "  background-color: #1e1f22;"
-        "}"
-        );
+    // ui->labelMusicool->setAlignment(Qt::AlignCenter);
+    // ui->labelMusicool->setMaximumHeight(128);
+    // ui->labelMusicool->setMaximumWidth(256);
+    // ui->labelMusicool->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    // QPixmap px(":/imgs/MusicoolCapa.png");
+    // //ui->labelMusicool->setPixmap(px.scaled(ui->labelMusicool->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // ui->labelMusicool->setPixmap(px);
+    // ui->labelMusicool->setScaledContents(true);
+    // ui->verticalLayout_10->setAlignment(ui->labelMusicool, Qt::AlignHCenter);
+    // ui->labelMusicool->setStyleSheet(
+    //     "#labelMusicool {"
+    //     "  border: 2px solid #3C3C40;"
+    //     "  border-radius: 16px;"
+    //     "  background-color: #1e1f22;"
+    //     "}"
+    //     );
 
     ui->lineEdit_metronome->setObjectName("lineEdit_metronome");
     ui->lineEdit_metronome->setStyleSheet(
@@ -224,42 +396,185 @@ MainWindow::MainWindow(QWidget *parent)
     ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->textBrowser->setReadOnly(true);
     ui->textBrowser->setOpenExternalLinks(true);
-    ui->textBrowser->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->textBrowser->setTextInteractionFlags(Qt::NoTextInteraction);
     ui->textBrowser->setHtml(R"(
 <h2>Sobre o Musicool</h2>
 <p align='justify'>Esse aplicativo foi desenvolvido para ser usado
 por músicos da CCB, por isso é um aplicativo sem
 custo e em constante evolução.</p>
 
-<p>Se você é músico mas não é da CCB, também é gratuito
+<p align='justify'>Se você é músico mas não é da CCB, também é gratuito
 para você. Apenas diga 1 vez em voz alta:<br>
 <b>'Deus seja louvado: Amém!'</b>.</p>
 
+<div align='center'>
+<img src='qrc:/imgs/MusicoolCapa.png' width='200'/>
+</div>
+
+<h2>Bag</h2>
+<p align='justify'>Nesse menu estarão conceitos musicais utilizados no GEM. Evoluções estão
+ previstas, mas não planejadas, portanto, podem surgir ferramentas novas ou inovadoras para
+utilizarmos em nossos estudos.</p>
+<p align='justify'>Use as setas acima para navegar pela Bag.</p>
 <h2>Tuner</h2>
-<p>O Tuner tem o propósito de afinar instrumentos de sopro.
+<p align='justify'>O Tuner tem o propósito de afinar instrumentos de sopro.
 Deve funcionar também com violino, viola e celo.
 Ao clicar em <b>Tuner</b>, o microfone precisará ser
 aberto pelo aplicativo para 'escutar' seu instrumento.
-Ao sair da aba Tuner, o microfone será desligado automaticamente.</p>
+Ao sair da aba Tuner, o microfone será desligado automaticamente pelo Android, ao
+notar que o microfone não está mais em uso.</p>
 
 <h2>Frequency</h2>
-<p>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
+<p align='justify'>Esse é um gerador de frequência, para afinar em qualquer nota desejada.
 É possível também usar bemol e sustenido, trocar de nota ou de oitava,
 através dos botões.<br>
 Play e Stop levam até 2 segundos para iniciar.</p>
 
 <h2>Metronome</h2>
-<p>O metrônomo tem seleção de compasso binário, ternário e quaternário.
+<p align='justify'>O metrônomo tem seleção de compasso binário, ternário e quaternário.
 O ajuste de BPM permite adicionar 1 unidade de tempo ou 10 unidades de tempo por vez.</p>
 
 <h2>Sobre o autor</h2>
-<p>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
+<p align='justify'>Esse aplicativo é uma iniciativa pessoal de <i>Djames Suhanko</i>, não havendo
 nenhum vínculo do app com a CCB.</p>
 <p>O aplicativo, atualização, segurança e mantenimento é de inteira
 responsabilidade do autor.</p>
-<br><br>
+<br>
 <p>Que a Paz de Deus esteja em vossos lares. (Amém.)</p>
 )");
+
+    QScroller::grabGesture(ui->textBrowser_claves->viewport(), QScroller::TouchGesture);
+    ui->textBrowser_claves->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+    ui->textBrowser_claves->setStyleSheet(
+        "QScrollBar:vertical{width:16px;margin:0px;}"
+        "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
+        );
+    ui->textBrowser_claves->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->textBrowser_claves->setReadOnly(true);
+    ui->textBrowser_claves->setOpenExternalLinks(true);
+    ui->textBrowser_claves->setTextInteractionFlags(Qt::NoTextInteraction);
+    ui->textBrowser_claves->setHtml(R"(
+
+<h2>Endecagrama</h2>
+<div align='center'>
+<img src='qrc:/imgs/endecagrama.png' width='200'/>
+</div>
+<p align='justify'>Na ordem, vemos a clave <b>Sol</b>, <b>Dó</b> e <b>Fá</b>.</p>
+<p align='justify'>O <b>Dó</b> da região média é o Dó3, que em cifra é o C4. Esses
+são dois dos sistemas de numeração de oitavas, que divergem no ponto de contagem inicial
+(um sistema começa em 0, o outro em 1), mas atente-se a isso: O 'Dó central' tem 261.63Hz.
+ Esse número se refere à frequência de ondas emitidas pelo Dó central.</p>
+
+<p align='justify'>Alinhando o Dó3 das três claves, temos 11 linhas, que formam o
+<i>Endecagrama</i>.</p>
+<p align='justify'>A clave <b>Sol</b> é a clave dos agudos; a clave <b>Dó</b>, dos médios; e a
+ clave <b>Fá</b>, dos graves.</p>
+<p align='justify'>Cada clave marca sua respectiva nota de referência. Na clave <b>Sol</b>, a
+linha de sol é envolvida pelo círculo da clave. Na clave <b>Dó</b>, o Dó está na linha central,
+bem no centro da lira. Na clave de <b>Fá</b>, a linha de Fá está entre os dois pontos. Repare que
+na clave de <b>Fá</b> à esquerda, a bolinha da curva também está sobre o Fá. O 'Dó comum' das
+claves está dentro do pentagrama, bastando usar a nota de referência para encontrar a posição de Dó.
+)");
+
+
+    const QString html = R"(
+<div align="center">
+<table border="1" cellpadding="6" cellspacing="0" width="100%">
+  <tr bgcolor="#f5f5f5" align="center">
+    <th><font color="#000000">FIGURA</font></th>
+    <th><font color="#000000">NOME</font></th>
+    <th><font color="#000000">PAUSA</font></th>
+    <th><font color="#000000">VALOR</font></th>
+    <th><font color="#000000">TEMPO</font></th>
+  </tr>
+
+  <!-- Semibreve -->
+  <tr align="center">
+    <td><img src=":/imgs/001.png" alt="Semibreve" width="32" height="32"></td>
+    <td align="left">Semibreve</td>
+    <td><img src=":/imgs/002p.png" alt="Pausa de semibreve" width="32" height="32"></td>
+    <td>1</td>
+    <td>4</td>
+  </tr>
+
+  <!-- Mínima -->
+  <tr align="center">
+    <td><img src=":/imgs/002.png" alt="Mínima" width="32" height="32"></td>
+    <td align="left">Mínima</td>
+    <td><img src=":/imgs/001p.png" alt="Pausa de mínima" width="32" height="32"></td>
+    <td>2</td>
+    <td>2</td>
+  </tr>
+
+  <!-- Semínima -->
+  <tr align="center">
+    <td><img src=":/imgs/003.png" alt="Semínima" width="32" height="32"></td>
+    <td align="left">Semínima</td>
+    <td><img src=":/imgs/003p.png" alt="Pausa de semínima" width="32" height="32"></td>
+    <td>4</td>
+    <td>1</td>
+  </tr>
+
+  <!-- Colcheia -->
+  <tr align="center">
+    <td><img src=":/imgs/004.png" alt="Colcheia" width="32" height="32"></td>
+    <td align="left">Colcheia</td>
+    <td><img src=":/imgs/004p.png" alt="Pausa de colcheia" width="32" height="32"></td>
+    <td>8</td>
+    <td>1/2</td>
+  </tr>
+
+  <!-- Semicolcheia -->
+  <tr align="center">
+    <td><img src=":/imgs/005.png" alt="Semicolcheia" width="32" height="32"></td>
+    <td align="left">Semicolcheia</td>
+    <td><img src=":/imgs/005p.png" alt="Pausa de semicolcheia" width="32" height="32"></td>
+    <td>16</td>
+    <td>1/4</td>
+  </tr>
+</table>
+</div>
+
+<p align='justify'>O valor de referência é a proporção de notas que cabe na Semibreve. É fácil
+guardar os valores com essa fórmula básica:</p>
+<b>(n=0; n+1); VALOR = 2<sup>n</sup></b>
+<p align='justify'>Isto é:</p><br>
+2 elevado a 0 = 1;<br>
+2 elevado a 1 = 2;<br>
+2 elevador a 2 = 4;<br>
+e assim por diante.
+<p align='justify'>Já o tempo é justamente o tempo da nota. Não estão incluídas fusa e semifusa
+ nessa tabela porque não usamos em nosso hinário.</p>
+
+<p align='justify'>Outra coisa interessante é que o tempo médio dos hinos é 60BPM (Batidas Por Minuto).
+ Hinos com ~120BPM indicam Minima como a nota de 1 tempo, enquanto hinos com ~60BPM indicam a Seminima.<p>
+
+<p align='justify'>Lembre-se: Não é uma regra, mas esse andamento é considerado por causa do canto em
+harmonia.</p>
+
+<p align='justify'>No próximo item da Bag você encontrará uma calculadora de compasso, que auxiliará a
+validar os exercícios de compasso. Mas use para validar, ou quando não tiver certeza, senão você não
+aprenderá.</p>
+
+<p align='justify'></p>
+
+)";
+
+
+    QScroller::grabGesture(ui->textBrowser_figuras->viewport(), QScroller::TouchGesture);
+    ui->textBrowser_figuras->viewport()->setAttribute(Qt::WA_AcceptTouchEvents, true);
+
+    ui->textBrowser_figuras->setStyleSheet(
+        "QScrollBar:vertical{width:16px;margin:0px;}"
+        "QScrollBar::handle:vertical{min-height:24px;border-radius:8px;background:#888;}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{height:0;}"
+        );
+    ui->textBrowser_figuras->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->textBrowser_figuras->setReadOnly(true);
+    ui->textBrowser_figuras->setTextInteractionFlags(Qt::NoTextInteraction);
+    ui->textBrowser_figuras->setHtml(html);
 
     // ===== REF:METRONOME =====
     ui->lineEdit_metronome->setReadOnly(true);
@@ -274,29 +589,29 @@ responsabilidade do autor.</p>
     } else {
         auto *lay2 = new QVBoxLayout(ui->frameMetro);
         lay2->setContentsMargins(0,0,0,0);
-        lay2->addWidget(metro);
+        lay2->addWidget(metro, 0, Qt::AlignVCenter);
     }
 
-    m_group = new QButtonGroup(this);
-    b_group = new QButtonGroup(this);
 
-    m_group->addButton(ui->pushButton_2);
-    m_group->addButton(ui->pushButton_3);
-    m_group->addButton(ui->pushButton_4);
+    //metro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+    //ui->frameMetro->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 
-    m_group->setId(ui->pushButton_2,2);
-    m_group->setId(ui->pushButton_3,3);
-    m_group->setId(ui->pushButton_4,4);
-    m_group->setExclusive(true);
+    ui->beatSlider->setDiscreteValues({2,3,4});   // já é o padrão
+    ui->beatSlider->setValue(4);                  // começa em 4/4
+    ui->beatSlider->setShowLabels(true);          // mostra “2  3  4” abaixo
 
-    ui->pushButton_2->setCheckable(true);
-    ui->pushButton_3->setCheckable(true);
-    ui->pushButton_4->setCheckable(true);
-    ui->pushButton_4->setChecked(true);
+    // tema opcional (coincide com seu app)
+    ui->beatSlider->setColors(QColor("#2A2A2E"),  // trilho
+                              QColor("#0B3D0B"),  // ativo
+                              QColor("#B0B0B0"),  // ticks
+                              QColor("#A8FF00"),  // handle
+                              QColor("#E0E0E0")); // labels
 
-    connect(m_group, &QButtonGroup::idClicked, this, [this](int beats){
+    connect(ui->beatSlider, &BeatSlider::valueChanged, this, [this](int beats){
         metro->setBeatsPerMeasure(beats);
     });
+
+    b_group = new QButtonGroup(this);
 
     b_group->addButton(ui->pushButton_less_one);
     b_group->addButton(ui->pushButton_less_10);
@@ -429,7 +744,10 @@ responsabilidade do autor.</p>
     this->setupStaffInFrame();
 
     // ===== DEFAULT TAB =====
+    ui->stackWidget->setCurrentIndex(2);
     ui->toolBox->setCurrentIndex(PAGEINFO);
+    ui->stackWidget->setCurrentIndex(1);
+    ui->stackWidget->setCurrentIndex(0);
 
     // ======= REF:STAFF TUNER =========
     setupStaffInTuner();
@@ -623,3 +941,59 @@ void MainWindow::onMicrophonePermissionChanged(const QPermission &perm)
         qDebug() << "[MicPerm] denied (callback)";
 }
 #endif
+
+void MainWindow::setupStackNavigation()
+{
+    // ← botão voltar
+    connect(ui->pushButton_stackBack, &QPushButton::clicked, this, [this]{
+        auto *sw = ui->stackWidget;
+        if (!sw || sw->count() == 0) return;
+        int i = sw->currentIndex();
+        // retrocede (com wrap para a última página)
+        i = (i <= 0) ? (sw->count() - 1) : (i - 1);
+        sw->setCurrentIndex(i);
+    });
+
+    // → botão avançar
+    connect(ui->pushButton_stackNext, &QPushButton::clicked, this, [this]{
+        auto *sw = ui->stackWidget;
+        if (!sw || sw->count() == 0) return;
+        int i = sw->currentIndex();
+        // avança (com wrap para a primeira página)
+        i = (i + 1) % sw->count();
+        sw->setCurrentIndex(i);
+    });
+
+    // Sempre que trocar de página, atualiza o lineEdit
+    connect(ui->stackWidget, &QStackedWidget::currentChanged,
+            this, [this](int){ updateStackTitle(); });
+}
+
+QString MainWindow::currentPageTitle() const
+{
+    const auto *sw = ui->stackWidget;
+    if (!sw) return {};
+
+    QWidget *w = sw->currentWidget();
+    if (!w) return {};
+
+    // 1) tente uma propriedade "title" (útil para nomear no código/Designer)
+    if (w->property("title").isValid())
+        return w->property("title").toString();
+
+    // 2) tente windowTitle (pode ser definido no Designer)
+    if (!w->windowTitle().isEmpty())
+        return w->windowTitle();
+
+    // 3) fallback: objectName
+    return w->objectName();
+}
+
+void MainWindow::updateStackTitle() const
+{
+    const QString t = const_cast<MainWindow*>(this)->currentPageTitle();
+    // se quiser o lineEdit somente leitura:
+    // ui->LineEdit_titles->setReadOnly(true);
+    ui->lineEdit_titles->setText(t);
+}
+

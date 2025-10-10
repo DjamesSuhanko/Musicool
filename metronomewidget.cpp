@@ -1,23 +1,40 @@
 #include "MetronomeWidget.h"
 
 #include <QPainter>
-#include <QPainterPath>
-#include <QPaintEvent>
-#include <QStyleOption>
+#include <QAudioSink>
 #include <QMediaDevices>
 #include <QAudioDevice>
-#include <QAudioSink>
 #include <QtMath>
+#include <QIODevice>
 
-// ---------------- ctor/dtor ----------------
+// ------------------------------------
+// Utilitários pequenos
+static inline int clampInt(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v); }
+static inline float lerp(float a, float b, float t) { return a + (b - a) * t; }
+// ------------------------------------
+
+
 MetronomeWidget::MetronomeWidget(QWidget *parent)
     : QWidget(parent)
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
-    setMinimumHeight(120);
 
-    m_timer.setTimerType(Qt::PreciseTimer);
+    // Ajusta paleta para as barras:
+    // - m_box        -> verde bem escuro (barras ativas “em espera”)
+    // - m_highlightDn-> verde limão (barra ativa no tick)
+    // - m_boxBorder  -> não usamos borda nas barras, mas mantemos um cinza escuro
+    m_bg        = QColor("#121212");
+    m_box       = QColor("#0B3D0B");  // verde escuro
+    m_highlightDn = QColor("#A8FF00"); // verde limão (ativa)
+    m_boxBorder = QColor("#3A3A3A");  // cinza (usado para barras “fora do compasso”)
+
+    // Timer
     connect(&m_timer, &QTimer::timeout, this, &MetronomeWidget::onBeat);
+    m_timer.setTimerType(Qt::PreciseTimer);
+
+    // Áudio pré-config
+    ensureAudio();
+    prepareClicks();
 }
 
 MetronomeWidget::~MetronomeWidget()
@@ -26,11 +43,9 @@ MetronomeWidget::~MetronomeWidget()
     if (m_sink) { m_sink->stop(); m_sink->deleteLater(); m_sink = nullptr; }
 }
 
-// ---------------- parâmetros públicos ----------------
 void MetronomeWidget::setBeatsPerMeasure(int beats)
 {
-    if (beats < 2) beats = 2;
-    if (beats > 4) beats = 4;
+    beats = clampInt(beats, 2, 4);
     if (m_beats == beats) return;
     m_beats = beats;
     m_currentBeat = 0;
@@ -39,9 +54,10 @@ void MetronomeWidget::setBeatsPerMeasure(int beats)
 
 void MetronomeWidget::setBpm(int bpm)
 {
-    bpm = qBound(30, bpm, 300);
+    bpm = clampInt(bpm, 30, 300);
     if (m_bpm == bpm) return;
     m_bpm = bpm;
+
     if (m_running) {
         const int intervalMs = int(60000.0 / double(m_bpm));
         m_timer.start(intervalMs);
@@ -67,34 +83,35 @@ void MetronomeWidget::setAccentEnabled(bool on)
 void MetronomeWidget::setVolume(float vol01)
 {
     m_volume = qBound(0.0f, vol01, 1.0f);
-    if (m_sink) m_sink->setVolume(m_volume);
 }
 
 void MetronomeWidget::setDownbeatHz(double hz)
 {
-    m_fDownbeat = qBound(100.0, hz, 2000.0);
+    m_fDownbeat = qMax(20.0, hz);
     prepareClicks();
 }
 
 void MetronomeWidget::setUpbeatHz(double hz)
 {
-    m_fUpbeat = qBound(100.0, hz, 4000.0);
+    m_fUpbeat = qMax(20.0, hz);
     prepareClicks();
 }
 
-// ---------------- controle ----------------
 void MetronomeWidget::start()
 {
     if (m_running) return;
 
     ensureAudio();
-    m_currentBeat = m_beats - 1;                 // << prepara para virar para 0 no primeiro tick
+    prepareClicks();
+
+    // Preparar para que a PRIMEIRA batida seja o tempo 1 (índice 0)
+    m_currentBeat = m_beats - 1;
 
     const int intervalMs = int(60000.0 / double(m_bpm));
     m_timer.start(intervalMs);
     m_running = true;
 
-    onBeat();                                    // toca imediatamente o 1 (downbeat)
+    onBeat(); // toca e destaca imediatamente o tempo 1
 }
 
 void MetronomeWidget::stop()
@@ -105,108 +122,27 @@ void MetronomeWidget::stop()
     update();
 }
 
-// ---------------- áudio helpers ----------------
-void MetronomeWidget::ensureAudio()
-{
-    if (!m_audioOn) return;
-
-    // cria/recria a saída se necessário
-    if (!m_sink) {
-        QAudioDevice dev = QMediaDevices::defaultAudioOutput();
-        QAudioFormat fmt;
-        fmt.setSampleRate(m_sampleRate);
-        fmt.setChannelCount(1);
-        fmt.setSampleFormat(QAudioFormat::Int16);
-
-        if (!dev.isFormatSupported(fmt)) {
-            fmt = dev.preferredFormat();
-            m_sampleRate = fmt.sampleRate();
-        }
-
-        m_sink = new QAudioSink(dev, fmt, this);
-        m_sink->setVolume(m_volume);
-        m_out = m_sink->start();
-
-        prepareClicks();
-    } else if (!m_out) {
-        m_out = m_sink->start();
-    }
-}
-
-static QVector<qint16> genClick(int sr, double hz, int ms, float amp = 0.9f)
-{
-    const int N = qMax(1, (sr * ms) / 1000);
-    QVector<qint16> out;
-    out.resize(N);
-    const double w = 2.0 * M_PI * hz / double(sr);
-
-    // janela curta (fade in/out) para evitar estalos
-    const int fade = qMax(1, sr / 1000 * 2); // ~2 ms
-    for (int i=0; i<N; ++i) {
-        double env = 1.0;
-        if (i < fade) env = double(i) / fade;
-        else if (i > N - 1 - fade) env = double(N - 1 - i) / fade;
-
-        double s = amp * env * std::sin(w * i);
-        s = qBound(-1.0, s, 1.0);
-        out[i] = qint16(s * 32767.0);
-    }
-    return out;
-}
-
-void MetronomeWidget::prepareClicks()
-{
-    if (!m_sink) return; // será chamado no ensureAudio novamente
-    const int sr = m_sink->format().sampleRate();
-    // duração curta ~35 ms (não atrapalha BPM alto)
-    m_clickDown = genClick(sr, m_fDownbeat, 40, 0.95f);
-    m_clickUp   = genClick(sr, m_fUpbeat,   32, 0.85f);
-}
-
-void MetronomeWidget::playClick(bool downbeat)
-{
-    if (!m_audioOn || !m_sink || !m_out) return;
-
-    const QVector<qint16>& v = downbeat ? m_clickDown : m_clickUp;
-    if (v.isEmpty()) return;
-
-    const char* ptr = reinterpret_cast<const char*>(v.constData());
-    const int   len = v.size() * int(sizeof(qint16));
-    m_out->write(ptr, len);
-}
-
-// ---------------- tick ----------------
 void MetronomeWidget::onBeat()
 {
-    // 0,1,2,3...
+    // 0..beats-1 (incrementa ANTES e pinta/soa DEPOIS)
     m_currentBeat = (m_currentBeat + 1) % m_beats;
 
     const bool isDown = (m_currentBeat == 0);
     if (m_audioOn) playClick(isDown && m_accentOn);
 
     emit tick(m_currentBeat, isDown);
-
-    update();     // o repaint agora reflete exatamente a batida tocada
+    update();
 }
 
+// ----------------------- DESENHO -----------------------
 
-// ---------------- pintura ----------------
 void MetronomeWidget::paintEvent(QPaintEvent*)
 {
     QPainter g(this);
     g.setRenderHint(QPainter::Antialiasing, true);
 
     drawBackground(g);
-    drawBeatSquares(g);
-
-    // BPM no canto
-    g.setPen(m_text);
-    QFont f = font();
-    f.setBold(true);
-    f.setPointSizeF(qMax(9.0, height() * 0.13));
-    g.setFont(f);
-    const QString bpmTxt = QString::number(m_bpm) + " BPM";
-    g.drawText(rect().adjusted(8, 6, -8, -6), Qt::AlignLeft | Qt::AlignTop, bpmTxt);
+    drawBeatSquares(g); // aqui implementamos as BARRAS (mantemos o nome da função)
 }
 
 void MetronomeWidget::drawBackground(QPainter &g)
@@ -216,53 +152,120 @@ void MetronomeWidget::drawBackground(QPainter &g)
 
 void MetronomeWidget::drawBeatSquares(QPainter &g)
 {
-    const int n = m_beats;
+    const QRectF full = QRectF(rect()).marginsRemoved(QMarginsF(12, 12, 12, 12));
 
-    // área útil
-    const qreal m = qMin(width(), height()) * 0.10;
-    QRectF area = QRectF(rect()).marginsRemoved(QMarginsF(m, m*1.3, m, m*0.8));
+    // Agora é uma ÚNICA fileira horizontal de barras
+    const int totalBars  = 4;                      // sempre desenhamos 4
+    const int beatsInUse = qBound(1, m_beats, 4);  // quantas estão ativas no compasso
 
+    // Geometria das barras: finas na vertical, lado a lado na horizontal
+    const qreal gapX      = qMax<qreal>(8.0, full.width() * 0.03);
+    const qreal barHeight = qMax<qreal>(10.0, full.height() * 0.18); // “estreita” verticalmente
+    const qreal totalW    = full.width() - (totalBars - 1) * gapX;
+    const qreal barWidth  = qMax<qreal>(12.0, totalW / totalBars);
 
+    const qreal y = full.center().y() - barHeight / 2.0;
+    const qreal r = qMin<qreal>(8.0, barHeight * 0.35); // canto arredondado leve
 
-    // dimensões dos quadrados
-    const qreal gap = qMax<qreal>(6.0, area.width() * 0.02);
-    const qreal wTot = area.width() - gap * (n - 1);
-    const qreal boxW = qMax<qreal>(40.0, wTot / n);
-    const qreal boxH = qMin<qreal>(qMax<qreal>(50.0, area.height()), boxW * 0.9);
-    const qreal y = area.center().y() - boxH / 2.0;
-    const qreal radius = qMin(boxW, boxH) * 0.18;
+    g.setPen(Qt::NoPen);
 
-    QPen pen(m_boxBorder, 1.2);
-    for (int i = 0; i < n; ++i) {
-        const qreal x = area.left() + i * (boxW + gap);
+    for (int i = 0; i < totalBars; ++i) {
+        const qreal x = full.left() + i * (barWidth + gapX);
+        const QRectF bar(x, y, barWidth, barHeight);
 
-        // torna o “box” um círculo: usa o menor dos dois lados como diâmetro
-        const qreal d  = qMin(boxW, boxH);
-        const qreal yC = y + (boxH - d) / 2.0;
-        QRectF r(x, yC, d, d);
+        QColor fill;
+        if (i >= beatsInUse) {
+            fill = m_boxBorder;               // barras “fora” quando compasso < 4 → cinza
+        } else if (i == m_currentBeat) {
+            fill = m_highlightDn;             // barra do tempo atual → verde limão
+        } else {
+            fill = m_box;                     // barras ativas em espera → verde escuro
+        }
 
-        const bool active = (i == m_currentBeat);
-        const bool down   = (i == 0);
-
-        QColor fill = m_box;
-        if (active) fill = down ? m_highlightDn : m_highlightUp;
-
-        // fundo do círculo
-        g.setPen(Qt::NoPen);
         g.setBrush(fill);
-        g.drawEllipse(r);
+        g.drawRoundedRect(bar, r, r);
+    }
+}
 
-        // borda
-        g.setPen(pen);
-        g.setBrush(Qt::NoBrush);
-        g.drawEllipse(r);
 
-        // número do tempo (centralizado no círculo)
-        QFont f = font();
-        f.setBold(active);
-        f.setPointSizeF(qMax(10.0, d * 0.40));
-        g.setFont(f);
-        g.setPen(QColor("#EEEEEE"));
-        g.drawText(r, Qt::AlignCenter, QString::number(i + 1));
+// ----------------------- ÁUDIO -----------------------
+
+void MetronomeWidget::ensureAudio()
+{
+    if (m_sink) return;
+
+    QAudioDevice dev = QMediaDevices::defaultAudioOutput();
+    QAudioFormat fmt;
+    fmt.setSampleRate(m_sampleRate);
+    fmt.setChannelCount(1);
+    fmt.setSampleFormat(QAudioFormat::Int16);
+
+    if (!dev.isFormatSupported(fmt)) {
+        fmt = dev.preferredFormat();
+    }
+    m_sampleRate = fmt.sampleRate();
+
+    m_sink = new QAudioSink(dev, fmt, this);
+    m_sink->setVolume(1.0f); // volume do dispositivo (0..1)
+
+    // usamos modo push: gravamos os samples no QIODevice retornado
+    m_out = m_sink->start();
+}
+
+void MetronomeWidget::prepareClicks()
+{
+    // Gera dois “clicks” curtos com envelope, para escrever em m_out no onBeat()
+    // Duração ~60 ms; ataque curto, decaimento exponencial
+    if (!m_sink) return;
+
+    auto makeClick = [&](double freqHz)->QVector<qint16> {
+        const int durMs   = 60;
+        const int N       = int((m_sampleRate * durMs) / 1000.0);
+        QVector<qint16> v; v.resize(qMax(1, N));
+
+        const double twoPi = 2.0 * M_PI;
+        const double w = twoPi * freqHz / double(m_sampleRate);
+
+        // envelope: ataque 2 ms, sustain curto, release exponencial
+        const int attack  = qMax(1, int(m_sampleRate * 0.002));
+        const int release = qMax(1, N - attack);
+
+        double amp = m_volume; // 0..1
+        for (int n = 0; n < N; ++n) {
+            float env = 1.0f;
+            if (n < attack) {
+                env = float(n) / float(attack); // ataque linear
+            } else {
+                const float t = float(n - attack) / float(qMax(1, release));
+                // decaimento suave (exponencial aproximado)
+                env = std::exp(-4.0f * t);
+            }
+
+            const double s = std::sin(w * n) * (amp * env);
+            const int smp = int(qBound(-1.0, s, 1.0) * 32767.0);
+            v[n] = qint16(smp);
+        }
+        return v;
+    };
+
+    m_clickDown = makeClick(m_fDownbeat);
+    m_clickUp   = makeClick(m_fUpbeat);
+}
+
+void MetronomeWidget::playClick(bool downbeat)
+{
+    if (!m_sink || !m_out) return;
+
+    const QVector<qint16>& src = downbeat ? m_clickDown : m_clickUp;
+    if (src.isEmpty()) return;
+
+    // escreve em modo push (bloqueio mínimo)
+    const char* data = reinterpret_cast<const char*>(src.constData());
+    const qint64 bytes = qint64(src.size() * int(sizeof(qint16)));
+    qint64 written = 0;
+    while (written < bytes) {
+        const qint64 w = m_out->write(data + written, bytes - written);
+        if (w <= 0) break; // evita loop infinito se algo der errado
+        written += w;
     }
 }
