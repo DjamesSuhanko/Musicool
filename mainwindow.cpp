@@ -162,6 +162,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->toolBox->setItemText(0, QString::fromUtf8(u8"\U0001D15F") + " Bag");
+    ui->toolBox->setItemText(1, QString::fromUtf8(u8"\U0001D15E") + " Tuner");
+    ui->toolBox->setItemText(2, QString::fromUtf8(u8"\U0001D15E") + QString::fromUtf8(u8"\U0001D15F") + " Frequency");
+    ui->toolBox->setItemText(3, QString::fromUtf8(u8"\U0001D15D") + " Metronome");
+
 
     setupStackNavigation();
     updateStackTitle();

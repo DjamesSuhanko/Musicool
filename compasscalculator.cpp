@@ -110,8 +110,8 @@ QString CompassCalculator::glyphFromRef(bool isRest, int refDen) {
         switch (refDen) {
         case 1:  return QString::fromUtf8("𝅝"); // semibreve
         case 2:  return QString::fromUtf8("𝅗𝅥"); // mínima
-        case 4:  return QString::fromUtf8("♩"); // seminima
-        case 8:  return QString::fromUtf8("♪"); // colcheia
+        case 4:  return QString::fromUtf8(u8"\U0001D15F"); // seminima
+        case 8:  return QString::fromUtf8(u8"\U0001D160"); // colcheia
         case 16: return QString::fromUtf8("𝅘𝅥𝅯"); // semicolcheia
         default: return "note";
         }
