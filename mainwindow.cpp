@@ -162,6 +162,21 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // no ctor:
+    int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
+    // ou ":/fonts/BravuraText.ttf"
+    QString family = QFontDatabase::applicationFontFamilies(id).value(0);
+    QFont music(family);
+    music.setPointSizeF(ui->lineEdit_calc_notes->font().pointSizeF() * 1.2); // opcional
+
+    ui->lineEdit_calc_notes->setFont(music);
+
+    QFont tbFont = music;
+    tbFont.setPointSizeF( tbFont.pointSizeF() * 0.6 );
+    ui->toolBox->setFont(tbFont);
+
+
+
     ui->toolBox->setItemText(0, QString::fromUtf8(u8"\U0001D15F") + " Bag");
     ui->toolBox->setItemText(1, QString::fromUtf8(u8"\U0001D15E") + " Tuner");
     ui->toolBox->setItemText(2, QString::fromUtf8(u8"\U0001D15E") + QString::fromUtf8(u8"\U0001D15F") + " Frequency");
@@ -260,14 +275,14 @@ MainWindow::MainWindow(QWidget *parent)
     auto *calc = new CompassCalculator(this);
     calc->setButtonGroup(calc_group);
 
-    // no ctor:
-    int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
-    // ou ":/fonts/BravuraText.ttf"
-    QString family = QFontDatabase::applicationFontFamilies(id).value(0);
-    QFont music(family);
-    music.setPointSizeF(ui->lineEdit_calc_notes->font().pointSizeF() * 1.2); // opcional
+    // // no ctor:
+    // int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
+    // // ou ":/fonts/BravuraText.ttf"
+    // QString family = QFontDatabase::applicationFontFamilies(id).value(0);
+    // QFont music(family);
+    // music.setPointSizeF(ui->lineEdit_calc_notes->font().pointSizeF() * 1.2); // opcional
 
-    ui->lineEdit_calc_notes->setFont(music);
+    // ui->lineEdit_calc_notes->setFont(music);
     //ui->labelSeq->setTextFormat(Qt::RichText);
 
     // connect(calc, &CompassCalculator::totalChanged, this,
