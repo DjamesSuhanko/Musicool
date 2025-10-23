@@ -156,11 +156,98 @@ void MainWindow::setupStaffInTuner()
     if (m_staffTuner->parentWidget() != f) lay->addWidget(m_staffTuner);
 }
 
+double MainWindow::norm01InThisTurn(int v) const {
+    if (m_maxv <= m_minv) return 0.0;
+    double t = double(v - m_minv) / double(m_maxv - m_minv);
+    if (t < 0.0) t = 0.0; else if (t > 1.0) t = 1.0;
+    return t;
+}
+
+double MainWindow::mapExp01ToHz(double t01) const {
+    // mapeamento exponencial: 200..4000 Hz
+    const double ratio = kMaxHz / kMinHz;
+    return kMinHz * std::pow(ratio, std::clamp(t01, 0.0, 1.0));
+}
+
+void MainWindow::onPitchDialChanged(int v) {
+    // Usa os widgets corretos já existentes nesta classe
+    auto* dial  = ui->dialMetronome;   // era ui->dialPitch
+    auto* metro = this->metro;         // era ui->metronomeWidget
+    if (!dial || !metro) return;
+
+    // ---- detecção de wrap (várias voltas) ----
+    const int prev = m_prevDialValue;
+    m_prevDialValue = v;
+
+    const int span   = (m_maxv - m_minv + 1);
+    const int thresh = span / 4; // histerese para wraps (25% da volta)
+
+    // indo “para frente” e pulou de perto do max para perto do min → +1 volta
+    if (prev > (m_maxv - thresh) && v < (m_minv + thresh)) {
+        m_turnCounter = qMin(m_turnCounter + 1, m_turns);
+    }
+    // indo “para trás” e pulou do min para o max → -1 volta
+    else if (prev < (m_minv + thresh) && v > (m_maxv - thresh)) {
+        m_turnCounter = qMax(m_turnCounter - 1, 0);
+    }
+
+    // progresso total (0..1) = voltas completas + fração da volta atual
+    const double turnFrac = norm01InThisTurn(v);
+    double total01 = (double(m_turnCounter) + turnFrac) / double(qMax(1, m_turns));
+    if (total01 > 1.0) total01 = 1.0;
+    if (total01 < 0.0) total01 = 0.0;
+
+    // expõe para o ModernDial pintar a barra de progresso total
+    dial->setProperty("progress01", total01);
+    dial->update(); // força repintura com o novo progress01
+
+    // converte 0..1 em Hz e aplica no metrônomo
+    const double hz = mapExp01ToHz(total01);
+    metro->setBeepFrequencyHz(hz);
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //REF:DIAL Configuração coerente de faixa/voltas para dial do metronomo
+    m_minv  = 0;
+    m_maxv  = 999;          // resolução por volta
+    m_turns = 10;           // idem ao ModernDial::turns
+
+    auto *d = ui->dialMetronome;
+
+    // Paleta do app:
+    d->setProperty("trackColor",    QColor("#0B3D0B"));  // trilho
+    d->setProperty("progressColor", QColor("#A8FF00"));  // progresso
+    d->setProperty("handleColor",   QColor("#A8FF00"));  // bolinha (combina com progresso)
+    d->setProperty("textColor",     QColor("#EEEEEE"));  // % no centro
+    d->setProperty("thickness",     10);                 // ajuste fino da espessura
+
+    // Layout do arco (opcional):
+    d->setProperty("fullCircle",        true);  // 360°
+    d->setProperty("displayTurnPercent", false); // mostra % TOTAL (0..100)
+
+    // Recalcula pintura
+    d->update();
+
+    ui->dialMetronome->setMinimum(m_minv);
+    ui->dialMetronome->setMaximum(m_maxv);
+    ui->dialMetronome->setWrapping(true);               // ModernDial respeita isso
+    ui->dialMetronome->setProperty("turns", m_turns);   // opcional: bate com o ModernDial
+    ui->dialMetronome->setProperty("progress01", 0.0);  // ModernDial lê isso no paintEvent
+    ui->dialMetronome->update();
+
+    connect(ui->dialMetronome, &QDial::valueChanged, this, &MainWindow::onPitchDialChanged);
+
+    // inicializa um pitch padrão (ex.: upbeat ~900 Hz) - chamando após criar o metronomo em REF:METRONOME
+    //metro->setBeepFrequencyHz(900.0);
+    ui->dialMetronome->setValue(m_minv); // zera o ciclo
+
+    m_prevDialValue = ui->dialMetronome->value();
 
     // no ctor:
     int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
@@ -598,6 +685,9 @@ aprenderá.</p>
     metro->setBpm(ui->lineEdit_metronome->text().toInt());
     metro->setAudioEnabled(true);
     metro->setAccentEnabled(true);
+
+    metro->setBeepFrequencyHz(900.0);
+
 
     if (auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout())) {
         lay->addWidget(metro);

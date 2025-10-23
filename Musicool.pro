@@ -15,6 +15,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     metronomewidget.cpp \
+    moderndial.cpp \
     pitchtracker.cpp \
     staffnotewidget.cpp \
     tonegenerator.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     compasscalculator.h \
     mainwindow.h \
     metronomewidget.h \
+    moderndial.h \
     pitchtracker.h \
     staffnotewidget.h \
     theme.h \
@@ -61,5 +63,5 @@ RESOURCES += \
 
 # Só 64-bit (Play exige 64-bit)
 ANDROID_ABIS = arm64-v8a
-VERSION = 2.9.2           # vira versionName
-ANDROID_VERSION_CODE = 13  # inteiro crescente a cada release
+VERSION = 3.2.9           # vira versionName
+ANDROID_VERSION_CODE = 14  # inteiro crescente a cada release

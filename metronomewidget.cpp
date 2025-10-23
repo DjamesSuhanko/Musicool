@@ -6,6 +6,8 @@
 #include <QAudioDevice>
 #include <QtMath>
 #include <QIODevice>
+#include <algorithm> // std::clamp
+#include <cmath>
 
 // ------------------------------------
 // Utilitários pequenos
@@ -83,18 +85,74 @@ void MetronomeWidget::setAccentEnabled(bool on)
 void MetronomeWidget::setVolume(float vol01)
 {
     m_volume = qBound(0.0f, vol01, 1.0f);
+    // volume impacta a síntese dos clicks — regen para refletir
+    prepareClicks();
 }
 
 void MetronomeWidget::setDownbeatHz(double hz)
 {
-    m_fDownbeat = qMax(20.0, hz);
+    // clamp suave
+    if (!std::isfinite(hz)) hz = m_fDownbeat;
+    hz = std::clamp(hz, kMinBeepHz, kMaxBeepHz);
+
+    if (qFuzzyCompare(1.0 + m_fDownbeat, 1.0 + hz)) return;
+    m_fDownbeat = hz;
     prepareClicks();
 }
 
 void MetronomeWidget::setUpbeatHz(double hz)
 {
-    m_fUpbeat = qMax(20.0, hz);
+    if (!std::isfinite(hz)) hz = m_fUpbeat;
+    hz = std::clamp(hz, kMinBeepHz, kMaxBeepHz);
+
+    if (qFuzzyCompare(1.0 + m_fUpbeat, 1.0 + hz)) return;
+    m_fUpbeat = hz;
     prepareClicks();
+}
+
+// ---------- NOVO: método universal de pitch ----------
+void MetronomeWidget::setBeepFrequencyHz(double hz)
+{
+    if (!std::isfinite(hz)) return;
+    hz = std::clamp(hz, kMinBeepHz, kMaxBeepHz);
+
+    // 1) ratio atual (up/down). Se ficar degenerado (~1.0), use um mínimo saudável.
+    double ratio = currentUpOverDownRatio(); // ex.: ~1.8 (900/500)
+    if (!std::isfinite(ratio) || ratio < 1.10) {
+        ratio = 1.8; // fallback: mantém downbeat perceptivelmente mais grave
+    }
+
+    // 2) define novo upbeat a partir do dial
+    const double newUp = hz;
+
+    // 3) downbeat é mais grave, mantendo a razão (com clamp).
+    double newDn = newUp / ratio;
+    newDn = std::clamp(newDn, kMinBeepHz, kMaxBeepHz);
+
+    bool changed = false;
+    if (!qFuzzyCompare(1.0 + m_fUpbeat,   1.0 + newUp)) {   m_fUpbeat   = newUp; changed = true; }
+    if (!qFuzzyCompare(1.0 + m_fDownbeat, 1.0 + newDn)) {   m_fDownbeat = newDn; changed = true; }
+
+    if (changed) {
+        prepareClicks(); // re-sintetiza buffers com as novas frequências
+    }
+}
+
+
+// ---------- NOVO: set explícito das duas frequências ----------
+void MetronomeWidget::setClickFrequencies(double downbeatHz, double upbeatHz)
+{
+    if (!std::isfinite(downbeatHz) || !std::isfinite(upbeatHz)) return;
+
+    downbeatHz = std::clamp(downbeatHz, kMinBeepHz, kMaxBeepHz);
+    upbeatHz   = std::clamp(upbeatHz,   kMinBeepHz, kMaxBeepHz);
+
+    bool changed = false;
+    if (!qFuzzyCompare(1.0 + m_fDownbeat, 1.0 + downbeatHz)) { m_fDownbeat = downbeatHz; changed = true; }
+    if (!qFuzzyCompare(1.0 + m_fUpbeat,   1.0 + upbeatHz))   { m_fUpbeat   = upbeatHz;   changed = true; }
+    if (changed) {
+        prepareClicks();
+    }
 }
 
 void MetronomeWidget::start()
@@ -268,4 +326,14 @@ void MetronomeWidget::playClick(bool downbeat)
         if (w <= 0) break; // evita loop infinito se algo der errado
         written += w;
     }
+}
+
+double MetronomeWidget::currentUpOverDownRatio() const
+{
+    // evita valores degenerados
+    const double safeDown = (m_fDownbeat <= 0.0 ? 1.0 : m_fDownbeat);
+    const double r = m_fUpbeat / safeDown;
+    // se ratio "quebrado", retorna default ~1.8 (900/500)
+    if (!std::isfinite(r) || r <= 0.0) return 1.8;
+    return r;
 }
