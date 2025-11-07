@@ -752,6 +752,37 @@ aprenderá.</p>
     wireTunerSignals();
     setupToolBoxBehavior();
 
+    // Paleta Musicool (dark + verdes)
+    const QColor bg        ("#121212"); // fundo
+    const QColor track     ("#0B3D0B"); // trilho (barra)
+    const QColor trackBorder("#3C3C40");
+    const QColor safe      ("#A8FF00"); // zona segura (o paint já usa alpha)
+    const QColor tick      ("#B0B0B0"); // marcações numéricas
+    const QColor text      ("#FAFAFA"); // textos
+    const QColor accent    ("#A8FF00"); // ponteiro/indicador
+    const QColor glow      ("#A8FF00"); // brilho do ponteiro
+    const QColor noteMark  ("#A8FF00"); // rótulos das notas -50/0/+50
+
+    if (m_tuner) {
+        m_tuner->setBackgroundColor(bg);
+        m_tuner->setTrackColor(track);
+        m_tuner->setTrackBorderColor(trackBorder);
+        m_tuner->setSafeZoneColor(safe);
+        m_tuner->setTickColor(tick);
+        m_tuner->setTextColor(text);
+        m_tuner->setIndicatorColor(accent);
+        m_tuner->setGlowColor(glow);
+        m_tuner->setNoteMarkerColor(noteMark);
+
+        // (opcionais, mas combinam com seu visual)
+        m_tuner->setGlowEnabled(true);           // brilho suave no ponteiro
+        m_tuner->setShowNumericTicks(true);      // mantém -50/-25/0/25/50
+        m_tuner->setShowNoteMarkers(true);       // mostra notas -50/0/+50
+        // m_tuner->setSafeBandCents(5);         // largura da zona ±5¢, ajuste se quiser
+
+        m_tuner->update();
+    }
+
     QTimer::singleShot(0, this, [this]{
         if (ui->toolBox->currentIndex() == TUNER)
             startTunerWithPermission();

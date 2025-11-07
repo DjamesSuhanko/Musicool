@@ -27,7 +27,7 @@ void ModernDial::paintEvent(QPaintEvent* e) {
     const int h = height();
     const int size = qMin(w, h);
 
-    const int margin = m_thickness/2 + 6;
+    const int margin = m_thickness/2 + 10;
     const QRectF rect(margin, margin, size - 2*margin, size - 2*margin);
 
     // Geometria do arco
@@ -53,7 +53,7 @@ void ModernDial::paintEvent(QPaintEvent* e) {
 
     // --------- PROGRESSO (VERDE) PROPORCIONAL AO TOTAL ----------
     // Tente ler "progress01" da MainWindow (0..1 total após 10 voltas).
-    // Se não vier, faça fallback para norm01/turns (cresce devagar).
+    // Se não vier, fazer fallback para norm01/turns (cresce devagar).
     double total01 = -1.0;
     if (this->property("progress01").isValid()) {
         bool ok = false;
