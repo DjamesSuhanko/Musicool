@@ -206,12 +206,51 @@ void MainWindow::onPitchDialChanged(int v) {
     metro->setBeepFrequencyHz(hz);
 }
 
+#include <algorithm> // std::clamp
+
+void MainWindow::onMetronomeVolumeDialChanged(int v)
+{
+    auto* dial = ui->dialMetronomeVolume;
+    if (!dial) return;
+
+    const int minv = m_volMinv;
+    const int maxv = m_volMaxv;
+    const int span = (maxv - minv + 1);
+    if (span <= 1 || m_volTurns <= 0) return;
+
+    const int prev = m_prevVolDialValue;
+    m_prevVolDialValue = v;
+
+    const int thresh = span / 4;
+
+    if (prev > (maxv - thresh) && v < (minv + thresh)) {
+        m_volTurnCounter = qMin(m_volTurnCounter + 1, m_volTurns);
+    } else if (prev < (minv + thresh) && v > (maxv - thresh)) {
+        m_volTurnCounter = qMax(m_volTurnCounter - 1, 0);
+    }
+
+    const double turnFrac = std::clamp(double(v - minv) / double(maxv - minv), 0.0, 1.0);
+    double total01 = (double(m_volTurnCounter) + turnFrac) / double(qMax(1, m_volTurns));
+    total01 = std::clamp(total01, 0.0, 1.0);
+
+    // pinta a barra total (10 voltas)
+    dial->setProperty("progress01", total01);
+    dial->update();
+
+    // ganho 0..2 (ou 0..1.5 se quiser)
+    const double gain = 2.0 * total01;
+
+    if (metro) metro->setBeepGain(gain);
+}
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
 
     //REF:DIAL Configuração coerente de faixa/voltas para dial do metronomo
     m_minv  = 0;
@@ -248,6 +287,39 @@ MainWindow::MainWindow(QWidget *parent)
     ui->dialMetronome->setValue(m_minv); // zera o ciclo
 
     m_prevDialValue = ui->dialMetronome->value();
+
+
+
+    //==================== REF:VOLUME ====================
+    // ===== DIAL VOLUME (mesmas regras do Pitch) =====
+    m_volMinv  = 0;
+    m_volMaxv  = 999;
+    m_volTurns = 10;
+
+    auto *dv = ui->dialMetronomeVolume;
+
+    // mesmas cores/estilo
+    dv->setProperty("trackColor",    QColor("#0B3D0B"));
+    dv->setProperty("progressColor", QColor("#A8FF00"));
+    dv->setProperty("handleColor",   QColor("#A8FF00"));
+    dv->setProperty("textColor",     QColor("#EEEEEE"));
+    dv->setProperty("thickness",     10);
+
+    dv->setProperty("fullCircle",         true);
+    dv->setProperty("displayTurnPercent", false);
+
+    dv->setMinimum(m_volMinv);
+    dv->setMaximum(m_volMaxv);
+    dv->setWrapping(true);
+    dv->setProperty("turns", m_volTurns);
+    dv->setProperty("progress01", 0.0);
+    dv->update();
+
+    // zera e inicializa estado para não “pular volta” no primeiro movimento
+    dv->setValue(m_volMinv);
+    m_prevVolDialValue = dv->value();
+    m_volTurnCounter   = 0;
+
 
     // no ctor:
     int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
@@ -687,6 +759,9 @@ aprenderá.</p>
     metro->setAccentEnabled(true);
 
     metro->setBeepFrequencyHz(900.0);
+
+    connect(ui->dialMetronomeVolume, SIGNAL(valueChanged(int)),
+            this, SLOT(onMetronomeVolumeDialChanged(int)));
 
 
     if (auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout())) {

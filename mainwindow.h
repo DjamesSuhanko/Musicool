@@ -54,6 +54,7 @@ private slots:
     void emitNote(); //conectar com os botoes de nota; identificar o botão e somar/subtrair, considerando >0 e <7
     void emitOctave();
     void onPitchDialChanged(int v);
+    void onMetronomeVolumeDialChanged(int v);
 
 private:
     Ui::MainWindow *ui;
@@ -100,6 +101,21 @@ private:
     // faixa de frequência desejada (pode ajustar)
     static constexpr double kMinHz = MetronomeWidget::kMinBeepHz;  // 200
     static constexpr double kMaxHz = MetronomeWidget::kMaxBeepHz;  // 4000
+
+
+    // ---------------------------
+    // estado do dial de VOLUME (separado do pitch!)
+    int m_prevVolDialValue = 0;
+    int m_volTurnCounter   = 0;
+
+    // (pode reaproveitar m_turns/m_minv/m_maxv se o dial for idêntico,
+    //  mas é mais seguro separar também se você quiser ranges diferentes)
+    int m_volTurns         = 10;
+    int m_volMinv          = 0;
+    int m_volMaxv          = 999;
+
+
+
 
 signals:
     void noteIdx(int v);

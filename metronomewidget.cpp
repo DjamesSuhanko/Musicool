@@ -39,6 +39,22 @@ MetronomeWidget::MetronomeWidget(QWidget *parent)
     prepareClicks();
 }
 
+void MetronomeWidget::setBeepGain(double gain)
+{
+    const double newGain = std::clamp(gain, 0.0, 2.0);
+    if (qFuzzyCompare(1.0 + m_beepGain, 1.0 + newGain))
+        return;
+
+    m_beepGain = newGain;
+    prepareClicks(); // <- importante para refletir na síntese
+}
+
+
+double MetronomeWidget::beepGain() const
+{
+    return m_beepGain;
+}
+
 MetronomeWidget::~MetronomeWidget()
 {
     stop();
@@ -288,7 +304,8 @@ void MetronomeWidget::prepareClicks()
         const int attack  = qMax(1, int(m_sampleRate * 0.002));
         const int release = qMax(1, N - attack);
 
-        double amp = m_volume; // 0..1
+        double amp = m_volume * m_beepGain; // volume base (0..1) * ganho (0..2)
+
         for (int n = 0; n < N; ++n) {
             float env = 1.0f;
             if (n < attack) {

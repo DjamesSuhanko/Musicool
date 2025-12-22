@@ -42,6 +42,9 @@ public:
     int  bpm() const             { return m_bpm; }
     bool isRunning() const       { return m_running; }
 
+    void setBeepGain(double gain);
+    double beepGain() const;
+
 signals:
     // Notifica a batida (0..beats-1), útil se quiser sincronizar algo externo
     void tick(int beatIndex, bool isDownbeat);
@@ -69,6 +72,8 @@ private:
 
     // utilitário: mantém razão segura (evita div/0)
     double currentUpOverDownRatio() const;
+
+    double m_beepGain = 1.0;
 
 private:
     // parâmetros
