@@ -156,11 +156,170 @@ void MainWindow::setupStaffInTuner()
     if (m_staffTuner->parentWidget() != f) lay->addWidget(m_staffTuner);
 }
 
+double MainWindow::norm01InThisTurn(int v) const {
+    if (m_maxv <= m_minv) return 0.0;
+    double t = double(v - m_minv) / double(m_maxv - m_minv);
+    if (t < 0.0) t = 0.0; else if (t > 1.0) t = 1.0;
+    return t;
+}
+
+double MainWindow::mapExp01ToHz(double t01) const {
+    // mapeamento exponencial: 200..4000 Hz
+    const double ratio = kMaxHz / kMinHz;
+    return kMinHz * std::pow(ratio, std::clamp(t01, 0.0, 1.0));
+}
+
+void MainWindow::onPitchDialChanged(int v) {
+    // Usa os widgets corretos já existentes nesta classe
+    auto* dial  = ui->dialMetronome;   // era ui->dialPitch
+    auto* metro = this->metro;         // era ui->metronomeWidget
+    if (!dial || !metro) return;
+
+    // ---- detecção de wrap (várias voltas) ----
+    const int prev = m_prevDialValue;
+    m_prevDialValue = v;
+
+    const int span   = (m_maxv - m_minv + 1);
+    const int thresh = span / 4; // histerese para wraps (25% da volta)
+
+    // indo “para frente” e pulou de perto do max para perto do min → +1 volta
+    if (prev > (m_maxv - thresh) && v < (m_minv + thresh)) {
+        m_turnCounter = qMin(m_turnCounter + 1, m_turns);
+    }
+    // indo “para trás” e pulou do min para o max → -1 volta
+    else if (prev < (m_minv + thresh) && v > (m_maxv - thresh)) {
+        m_turnCounter = qMax(m_turnCounter - 1, 0);
+    }
+
+    // progresso total (0..1) = voltas completas + fração da volta atual
+    const double turnFrac = norm01InThisTurn(v);
+    double total01 = (double(m_turnCounter) + turnFrac) / double(qMax(1, m_turns));
+    if (total01 > 1.0) total01 = 1.0;
+    if (total01 < 0.0) total01 = 0.0;
+
+    // expõe para o ModernDial pintar a barra de progresso total
+    dial->setProperty("progress01", total01);
+    dial->update(); // força repintura com o novo progress01
+
+    // converte 0..1 em Hz e aplica no metrônomo
+    const double hz = mapExp01ToHz(total01);
+    metro->setBeepFrequencyHz(hz);
+}
+
+#include <algorithm> // std::clamp
+
+void MainWindow::onMetronomeVolumeDialChanged(int v)
+{
+    auto* dial = ui->dialMetronomeVolume;
+    if (!dial) return;
+
+    const int minv = m_volMinv;
+    const int maxv = m_volMaxv;
+    const int span = (maxv - minv + 1);
+    if (span <= 1 || m_volTurns <= 0) return;
+
+    const int prev = m_prevVolDialValue;
+    m_prevVolDialValue = v;
+
+    const int thresh = span / 4;
+
+    if (prev > (maxv - thresh) && v < (minv + thresh)) {
+        m_volTurnCounter = qMin(m_volTurnCounter + 1, m_volTurns);
+    } else if (prev < (minv + thresh) && v > (maxv - thresh)) {
+        m_volTurnCounter = qMax(m_volTurnCounter - 1, 0);
+    }
+
+    const double turnFrac = std::clamp(double(v - minv) / double(maxv - minv), 0.0, 1.0);
+    double total01 = (double(m_volTurnCounter) + turnFrac) / double(qMax(1, m_volTurns));
+    total01 = std::clamp(total01, 0.0, 1.0);
+
+    // pinta a barra total (10 voltas)
+    dial->setProperty("progress01", total01);
+    dial->update();
+
+    // ganho 0..2 (ou 0..1.5 se quiser)
+    const double gain = 2.0 * total01;
+
+    if (metro) metro->setBeepGain(gain);
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
+
+    //REF:DIAL Configuração coerente de faixa/voltas para dial do metronomo
+    m_minv  = 0;
+    m_maxv  = 999;          // resolução por volta
+    m_turns = 10;           // idem ao ModernDial::turns
+
+    auto *d = ui->dialMetronome;
+
+    // Paleta do app:
+    d->setProperty("trackColor",    QColor("#0B3D0B"));  // trilho
+    d->setProperty("progressColor", QColor("#A8FF00"));  // progresso
+    d->setProperty("handleColor",   QColor("#A8FF00"));  // bolinha (combina com progresso)
+    d->setProperty("textColor",     QColor("#EEEEEE"));  // % no centro
+    d->setProperty("thickness",     10);                 // ajuste fino da espessura
+
+    // Layout do arco (opcional):
+    d->setProperty("fullCircle",        true);  // 360°
+    d->setProperty("displayTurnPercent", false); // mostra % TOTAL (0..100)
+
+    // Recalcula pintura
+    d->update();
+
+    ui->dialMetronome->setMinimum(m_minv);
+    ui->dialMetronome->setMaximum(m_maxv);
+    ui->dialMetronome->setWrapping(true);               // ModernDial respeita isso
+    ui->dialMetronome->setProperty("turns", m_turns);   // opcional: bate com o ModernDial
+    ui->dialMetronome->setProperty("progress01", 0.0);  // ModernDial lê isso no paintEvent
+    ui->dialMetronome->update();
+
+    connect(ui->dialMetronome, &QDial::valueChanged, this, &MainWindow::onPitchDialChanged);
+
+    // inicializa um pitch padrão (ex.: upbeat ~900 Hz) - chamando após criar o metronomo em REF:METRONOME
+    //metro->setBeepFrequencyHz(900.0);
+    ui->dialMetronome->setValue(m_minv); // zera o ciclo
+
+    m_prevDialValue = ui->dialMetronome->value();
+
+
+
+    //==================== REF:VOLUME ====================
+    // ===== DIAL VOLUME (mesmas regras do Pitch) =====
+    m_volMinv  = 0;
+    m_volMaxv  = 999;
+    m_volTurns = 10;
+
+    auto *dv = ui->dialMetronomeVolume;
+
+    // mesmas cores/estilo
+    dv->setProperty("trackColor",    QColor("#0B3D0B"));
+    dv->setProperty("progressColor", QColor("#A8FF00"));
+    dv->setProperty("handleColor",   QColor("#A8FF00"));
+    dv->setProperty("textColor",     QColor("#EEEEEE"));
+    dv->setProperty("thickness",     10);
+
+    dv->setProperty("fullCircle",         true);
+    dv->setProperty("displayTurnPercent", false);
+
+    dv->setMinimum(m_volMinv);
+    dv->setMaximum(m_volMaxv);
+    dv->setWrapping(true);
+    dv->setProperty("turns", m_volTurns);
+    dv->setProperty("progress01", 0.0);
+    dv->update();
+
+    // zera e inicializa estado para não “pular volta” no primeiro movimento
+    dv->setValue(m_volMinv);
+    m_prevVolDialValue = dv->value();
+    m_volTurnCounter   = 0;
+
 
     // no ctor:
     int id = QFontDatabase::addApplicationFont(":/Fonts/NotoMusic-Regular.ttf");
@@ -599,6 +758,12 @@ aprenderá.</p>
     metro->setAudioEnabled(true);
     metro->setAccentEnabled(true);
 
+    metro->setBeepFrequencyHz(900.0);
+
+    connect(ui->dialMetronomeVolume, SIGNAL(valueChanged(int)),
+            this, SLOT(onMetronomeVolumeDialChanged(int)));
+
+
     if (auto *lay = qobject_cast<QVBoxLayout*>(ui->frameMetro->layout())) {
         lay->addWidget(metro);
     } else {
@@ -661,6 +826,37 @@ aprenderá.</p>
     setupTunerInFrame();
     wireTunerSignals();
     setupToolBoxBehavior();
+
+    // Paleta Musicool (dark + verdes)
+    const QColor bg        ("#121212"); // fundo
+    const QColor track     ("#0B3D0B"); // trilho (barra)
+    const QColor trackBorder("#3C3C40");
+    const QColor safe      ("#A8FF00"); // zona segura (o paint já usa alpha)
+    const QColor tick      ("#B0B0B0"); // marcações numéricas
+    const QColor text      ("#FAFAFA"); // textos
+    const QColor accent    ("#A8FF00"); // ponteiro/indicador
+    const QColor glow      ("#A8FF00"); // brilho do ponteiro
+    const QColor noteMark  ("#A8FF00"); // rótulos das notas -50/0/+50
+
+    if (m_tuner) {
+        m_tuner->setBackgroundColor(bg);
+        m_tuner->setTrackColor(track);
+        m_tuner->setTrackBorderColor(trackBorder);
+        m_tuner->setSafeZoneColor(safe);
+        m_tuner->setTickColor(tick);
+        m_tuner->setTextColor(text);
+        m_tuner->setIndicatorColor(accent);
+        m_tuner->setGlowColor(glow);
+        m_tuner->setNoteMarkerColor(noteMark);
+
+        // (opcionais, mas combinam com seu visual)
+        m_tuner->setGlowEnabled(true);           // brilho suave no ponteiro
+        m_tuner->setShowNumericTicks(true);      // mantém -50/-25/0/25/50
+        m_tuner->setShowNoteMarkers(true);       // mostra notas -50/0/+50
+        // m_tuner->setSafeBandCents(5);         // largura da zona ±5¢, ajuste se quiser
+
+        m_tuner->update();
+    }
 
     QTimer::singleShot(0, this, [this]{
         if (ui->toolBox->currentIndex() == TUNER)

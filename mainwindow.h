@@ -12,6 +12,7 @@
 #include <QButtonGroup>
 #include "staffnotewidget.h"
 #include "compasscalculator.h"
+#include "ModernDial.h"
 
 #ifdef Q_OS_ANDROID
 #include <QPermission>
@@ -52,6 +53,8 @@ private slots:
     void setBPMvalue(QAbstractButton* button);
     void emitNote(); //conectar com os botoes de nota; identificar o botão e somar/subtrair, considerando >0 e <7
     void emitOctave();
+    void onPitchDialChanged(int v);
+    void onMetronomeVolumeDialChanged(int v);
 
 private:
     Ui::MainWindow *ui;
@@ -80,10 +83,39 @@ private:
     void updateStackTitle() const;    // joga o título atual no lineEdit
     QString currentPageTitle() const; // busca título da página atual
 
+    double mapExp01ToHz(double t01) const;
+    double norm01InThisTurn(int v) const;
+
     int noteIdxValue = 0;
     int octaveValue  = 4;
 
     QPixmap m_logo;
+
+    // estado para rastrear voltas do dial
+    int   m_prevDialValue = 0;
+    int   m_turnCounter   = 0;  // pode ser 0..m_turns
+    int   m_turns         = 10; // deve coincidir com ModernDial::turns
+    int   m_minv          = 0;
+    int   m_maxv          = 999; // bom ter bastante resolução por volta
+
+    // faixa de frequência desejada (pode ajustar)
+    static constexpr double kMinHz = MetronomeWidget::kMinBeepHz;  // 200
+    static constexpr double kMaxHz = MetronomeWidget::kMaxBeepHz;  // 4000
+
+
+    // ---------------------------
+    // estado do dial de VOLUME (separado do pitch!)
+    int m_prevVolDialValue = 0;
+    int m_volTurnCounter   = 0;
+
+    // (pode reaproveitar m_turns/m_minv/m_maxv se o dial for idêntico,
+    //  mas é mais seguro separar também se você quiser ranges diferentes)
+    int m_volTurns         = 10;
+    int m_volMinv          = 0;
+    int m_volMaxv          = 999;
+
+
+
 
 signals:
     void noteIdx(int v);

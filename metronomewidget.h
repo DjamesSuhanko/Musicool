@@ -24,10 +24,26 @@ public:
     void setDownbeatHz(double hz);      // frequência do 1º tempo
     void setUpbeatHz(double hz);        // frequência dos demais
 
+    // ---------- NOVO: controle universal de pitch ----------
+    // Faixa recomendada para o bip do metrônomo (evita inaudível/aliasing)
+    static constexpr double kMinBeepHz = 200.0;
+    static constexpr double kMaxBeepHz = 4000.0;
+
+    // Ajusta a frequência dos tempos "normais" (upbeat) e recalcula o downbeat
+    // mantendo o mesmo intervalo relativo (ratio = upbeat/downbeat).
+    // Aceita valor vindo de qualquer widget (dial/slider/botão...).
+    void setBeepFrequencyHz(double hz);
+
+    // Alternativa direta: define as duas frequências explicitamente.
+    void setClickFrequencies(double downbeatHz, double upbeatHz);
+
     // Estado
     int  beatsPerMeasure() const { return m_beats; }
     int  bpm() const             { return m_bpm; }
     bool isRunning() const       { return m_running; }
+
+    void setBeepGain(double gain);
+    double beepGain() const;
 
 signals:
     // Notifica a batida (0..beats-1), útil se quiser sincronizar algo externo
@@ -53,6 +69,11 @@ private:
     void ensureAudio();
     void prepareClicks();                // (re)gera samples p/ o formato atual
     void playClick(bool downbeat);
+
+    // utilitário: mantém razão segura (evita div/0)
+    double currentUpOverDownRatio() const;
+
+    double m_beepGain = 1.0;
 
 private:
     // parâmetros
