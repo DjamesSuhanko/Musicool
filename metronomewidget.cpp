@@ -35,13 +35,13 @@ MetronomeWidget::MetronomeWidget(QWidget *parent)
     m_timer.setTimerType(Qt::PreciseTimer);
 
     // Áudio pré-config
-    ensureAudio();
-    prepareClicks();
+    //ensureAudio();
+    //prepareClicks();
 }
 
 void MetronomeWidget::setBeepGain(double gain)
 {
-    const double newGain = std::clamp(gain, 0.0, 2.0);
+    const double newGain = std::clamp(gain, 0.0, 6.0);
     if (qFuzzyCompare(1.0 + m_beepGain, 1.0 + newGain))
         return;
 
@@ -193,6 +193,15 @@ void MetronomeWidget::stop()
     if (!m_running) return;
     m_timer.stop();
     m_running = false;
+
+    // libera saída de áudio para outros (ToneGenerator, etc.)
+    if (m_sink) {
+        m_sink->stop();
+        delete m_sink;
+        m_sink = nullptr;
+        m_out  = nullptr;
+    }
+
     update();
 }
 
@@ -266,24 +275,26 @@ void MetronomeWidget::drawBeatSquares(QPainter &g)
 
 void MetronomeWidget::ensureAudio()
 {
-    if (m_sink) return;
+    if (!m_sink) {
+        QAudioDevice dev = QMediaDevices::defaultAudioOutput();
+        QAudioFormat fmt;
+        fmt.setSampleRate(m_sampleRate);
+        fmt.setChannelCount(1);
+        fmt.setSampleFormat(QAudioFormat::Int16);
 
-    QAudioDevice dev = QMediaDevices::defaultAudioOutput();
-    QAudioFormat fmt;
-    fmt.setSampleRate(m_sampleRate);
-    fmt.setChannelCount(1);
-    fmt.setSampleFormat(QAudioFormat::Int16);
+        if (!dev.isFormatSupported(fmt)) {
+            fmt = dev.preferredFormat();
+        }
+        m_sampleRate = fmt.sampleRate();
 
-    if (!dev.isFormatSupported(fmt)) {
-        fmt = dev.preferredFormat();
+        m_sink = new QAudioSink(dev, fmt, this);
+        m_sink->setVolume(1.0f);
     }
-    m_sampleRate = fmt.sampleRate();
 
-    m_sink = new QAudioSink(dev, fmt, this);
-    m_sink->setVolume(1.0f); // volume do dispositivo (0..1)
-
-    // usamos modo push: gravamos os samples no QIODevice retornado
-    m_out = m_sink->start();
+    // Se estiver parado ou sem device de saída ativo, (re)inicia
+    if (!m_out) {
+        m_out = m_sink->start();
+    }
 }
 
 void MetronomeWidget::prepareClicks()
@@ -317,7 +328,11 @@ void MetronomeWidget::prepareClicks()
             }
 
             const double s = std::sin(w * n) * (amp * env);
-            const int smp = int(qBound(-1.0, s, 1.0) * 32767.0);
+            //const int smp = int(qBound(-1.0, s, 1.0) * 32767.0);
+            // soft clip: permite boost acima de 1.0 sem estourar tão feio
+            const double y = std::tanh(s); // precisa <cmath>
+            const int smp  = int(y * 32767.0);
+
             v[n] = qint16(smp);
         }
         return v;
