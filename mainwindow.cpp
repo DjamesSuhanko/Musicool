@@ -93,7 +93,7 @@ static void applyBottomInsetToFooterSpacer(QWidget* central) {
     // Evita margem dupla no grid raiz
     if (auto *grid = central->findChild<QGridLayout*>("gridLayout_3")) {
         //grid->setContentsMargins(10,40,10,40);
-        grid->setContentsMargins(10,0,10,0);
+        grid->setContentsMargins(2,0,2,0);
         grid->setSpacing(0);
     }
 
