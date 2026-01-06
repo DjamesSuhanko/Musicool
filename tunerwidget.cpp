@@ -4,8 +4,8 @@
 #include <QPropertyAnimation>
 #include <QEasingCurve>
 #include <QtMath>
-#include <QPainterPath>           // <-- necessário
-#include <QRadialGradient>        // <-- (usa QRadialGradient no desenho)
+#include <QPainterPath>
+#include <QRadialGradient>
 
 static double clampd(double v, double a, double b) {
     return v < a ? a : (v > b ? b : v);
@@ -139,14 +139,38 @@ void TunerWidget::paintEvent(QPaintEvent*)
         g.drawPath(path);
     }
 
-    // zona segura ±safeBand
+    // pontos da histerese (−safeBand / 0 / +safeBand)
     {
-        const double safeWidthRatio = (m_safeBand * 2.0) / (m_maxCents - m_minCents);
-        const qreal w = tr.width() * safeWidthRatio;
-        const QRectF safeRect(tr.center().x() - w/2.0, tr.top(), w, tr.height());
-        QPainterPath p; p.addRoundedRect(safeRect, radius, radius);
-        QColor c = m_safe; c.setAlpha(85);
-        g.fillPath(p, c);
+        const double range = (m_maxCents - m_minCents);
+        if (range > 0.0) {
+            auto drawDot = [&](double cents, qreal R, int alpha){
+                const double rr = valueToRatio(cents);
+                const qreal x = tr.left() + rr * tr.width();
+                const qreal y = tr.center().y();
+
+                QColor fill = m_safe; fill.setAlpha(alpha);
+                QColor stroke = m_trackBorder; stroke.setAlpha(qMin(255, alpha + 40));
+
+                g.setPen(QPen(stroke, 1.2));
+                g.setBrush(fill);
+                g.drawEllipse(QPointF(x, y), R, R);
+            };
+
+            const qreal rSmall  = tr.height() * 0.10;
+            const qreal rCenter = tr.height() * 0.12;
+
+            // clamp pra não sair do range
+            const double lo = clampd(-m_safeBand, m_minCents, m_maxCents);
+            const double hi = clampd( m_safeBand, m_minCents, m_maxCents);
+
+            // -safeBand e +safeBand
+            if (m_safeBand > 0.0) {
+                drawDot(lo, rSmall, 180);
+                drawDot(hi, rSmall, 180);
+            }
+            // centro
+            drawDot(0.0, rCenter, 210);
+        }
     }
 
     // ticks numéricos
@@ -192,7 +216,7 @@ void TunerWidget::paintEvent(QPaintEvent*)
         };
 
         drawLabel(-50, leftNote,  false);
-        if (!m_showTopNote)       // << evita sobrepor com o título grande
+        if (!m_showTopNote)
             drawLabel(  0, midNote,   true);
         drawLabel( 50, rightNote, false);
     }
@@ -240,7 +264,6 @@ void TunerWidget::paintEvent(QPaintEvent*)
         QRectF nbox(0, rect().top()+4, rect().width(), trackRect().top()-rect().top()-6);
         g.drawText(nbox, Qt::AlignHCenter|Qt::AlignVCenter, midNote);
 
-        // cents pequeno ao lado (ou abaixo)
         QFont f2 = font(); f2.setPointSizeF(qMax(9.0, height()*0.09));
         g.setFont(f2);
         const QString centsStr = QString::number(m_displayCents, 'f', 1) + " ¢";

@@ -92,7 +92,8 @@ static void applyBottomInsetToFooterSpacer(QWidget* central) {
 
     // Evita margem dupla no grid raiz
     if (auto *grid = central->findChild<QGridLayout*>("gridLayout_3")) {
-        grid->setContentsMargins(10,40,10,40);
+        //grid->setContentsMargins(10,40,10,40);
+        grid->setContentsMargins(2,0,2,0);
         grid->setSpacing(0);
     }
 
@@ -335,7 +336,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolBox->setFont(tbFont);
 
 
-
+    //REF: Texto das Abas
     ui->toolBox->setItemText(0, QString::fromUtf8(u8"\U0001D15F") + " Bag");
     ui->toolBox->setItemText(1, QString::fromUtf8(u8"\U0001D15E") + " Tuner");
     ui->toolBox->setItemText(2, QString::fromUtf8(u8"\U0001D15E") + QString::fromUtf8(u8"\U0001D15F") + " Frequency");
@@ -940,7 +941,7 @@ aprenderá.</p>
         qDebug() << "[Tone] hz =" << hz;
     });
 
-    // ===== STAFF =====
+    // ===== REF:STAFF =====
     this->staff = new StaffNoteWidget(this);
     staff->setPreferAccidentals(StaffNoteWidget::AccPref::Sharps);
     staff->setShowLabel(true);
@@ -975,6 +976,10 @@ aprenderá.</p>
         // 2) (opcional) por Hz — se quiser refletir microvariações
         // if (m_staffTuner) m_staffTuner->setFrequency(hz, StaffNoteWidget::AccPref::Sharps);
     });
+
+    //gambiarra para fazer o C4 aparecer no frequency pq não lembro onde ajustei isso
+    ui->pushButton_next->click();
+    ui->pushButton_previous->click();
 }
 
 bool MainWindow::event(QEvent *e)

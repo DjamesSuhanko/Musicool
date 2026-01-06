@@ -47,7 +47,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
          </font>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>2</number>
         </property>
         <property name="tabSpacing">
          <number>6</number>
@@ -1065,7 +1065,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                    <set>Qt::InputMethodHint::ImhNone</set>
                   </property>
                   <property name="text">
-                   <string>LA3</string>
+                   <string>DO3</string>
                   </property>
                   <property name="maxLength">
                    <number>8</number>
@@ -1098,7 +1098,7 @@ QPushButton:checked { background: #ffd500; color: white; }</string>
                    <set>Qt::InputMethodHint::ImhNone</set>
                   </property>
                   <property name="text">
-                   <string>440.00 Hz</string>
+                   <string>261.63Hz</string>
                   </property>
                   <property name="maxLength">
                    <number>14</number>
